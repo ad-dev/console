@@ -19,15 +19,17 @@ const (
 )
 
 type AsciiTable struct {
-	rows           [][]string
-	header         []string
-	footer         []string
-	colWidths      []uint
-	dest           *os.File
-	cellWidth      uint
-	addRowDiv      bool
-	defaultPadding padding
-	paddings       []padding
+	rows             [][]string
+	header           []string
+	footer           []string
+	colWidths        []uint
+	dest             *os.File
+	cellWidth        uint
+	addRowDiv        bool
+	defaultPadding   padding
+	paddings         []padding
+	truncateCells    []bool
+	truncateAllCells bool
 }
 
 func (t *AsciiTable) ClearRows() {
@@ -168,6 +170,29 @@ func (t *AsciiTable) getMaxCellWidth() int {
 	return maxWidth
 }
 
+func (t *AsciiTable) formatCell(j int, str string) string {
+
+	if t.cellWidth < 1 || len(str) < int(t.cellWidth)-1 {
+		return str
+	}
+
+	truncate := false
+
+	if t.truncateAllCells {
+		truncate = true
+	}
+
+	if j < len(t.truncateCells) {
+		truncate = t.truncateCells[j]
+	}
+
+	if truncate {
+		return fmt.Sprintf("%s...", strings.TrimSpace(str[:t.cellWidth-1]))
+	}
+	print("ho", t.truncateAllCells)
+	return str
+}
+
 func (t *AsciiTable) displayRow(row []string, cellWidths []uint, p padding) {
 	var pd padding
 	fmt.Fprint(t.dest, "|")
@@ -183,9 +208,9 @@ func (t *AsciiTable) displayRow(row []string, cellWidths []uint, p padding) {
 		}
 
 		if pd == PAD_LEFT {
-			fmt.Fprintf(t.dest, "%-"+strconv.Itoa(int(cellWidth))+"s |", row[j])
+			fmt.Fprintf(t.dest, "%-"+strconv.Itoa(int(cellWidth))+"s |", t.formatCell(j, row[j]))
 		} else {
-			fmt.Fprintf(t.dest, "%"+strconv.Itoa(int(cellWidth))+"s |", row[j])
+			fmt.Fprintf(t.dest, "%"+strconv.Itoa(int(cellWidth))+"s |", t.formatCell(j, row[j]))
 		}
 
 	}
@@ -273,6 +298,19 @@ func (t *AsciiTable) Display() error {
 func (t *AsciiTable) SetDefaultPadding(p padding) {
 	t.defaultPadding = p
 
+}
+
+func (t *AsciiTable) SetTruncateAllCells(flag bool) {
+	t.truncateAllCells = flag
+	print("yo", t.truncateAllCells)
+
+}
+
+func (t *AsciiTable) SetCellTruncate(col uint, flag bool) {
+	if col >= uint(len(t.truncateCells)) {
+		t.truncateCells = make([]bool, col+1)
+	}
+	t.truncateCells[col] = flag
 }
 
 func (t *AsciiTable) SetColumnPadding(col uint, p padding) {
