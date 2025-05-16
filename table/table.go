@@ -189,7 +189,6 @@ func (t *AsciiTable) formatCell(j int, str string) string {
 	if truncate {
 		return fmt.Sprintf("%s...", strings.TrimSpace(str[:t.cellWidth-1]))
 	}
-	print("ho", t.truncateAllCells)
 	return str
 }
 
