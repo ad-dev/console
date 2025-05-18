@@ -30,6 +30,7 @@ type AsciiTable struct {
 	paddings         []padding
 	truncateCells    []bool
 	truncateAllCells bool
+	cellFormatters   []map[*CellFormatterCallback][]CellCondition
 }
 
 func (t *AsciiTable) ClearRows() {
@@ -187,7 +188,19 @@ func (t *AsciiTable) formatCell(j int, str string) string {
 	}
 
 	if truncate {
-		return fmt.Sprintf("%s...", strings.TrimSpace(str[:t.cellWidth-1]))
+		str = fmt.Sprintf("%s...", strings.TrimSpace(str[:t.cellWidth-1]))
+	}
+	if j < len(t.cellFormatters) {
+		if formatters := t.cellFormatters[j]; formatters != nil {
+			for formatter, conditions := range formatters {
+				f := *formatter
+				if t.conditionsAreMet(conditions...) {
+					str = f(j, str)
+				}
+
+			}
+		}
+
 	}
 	return str
 }
@@ -369,6 +382,58 @@ func (t *AsciiTable) PrintFormattedJSON(key string) error {
 	fmt.Fprint(t.dest, "\n```\n")
 	return nil
 
+}
+
+func (t *AsciiTable) SetCellFormmatter(index int, cb CellFormatterCallback, conditions ...CellCondition) {
+	if index >= len(t.cellFormatters) {
+		t.cellFormatters = make([]map[*CellFormatterCallback][]CellCondition, index+1)
+	}
+	if t.cellFormatters[index] == nil {
+		t.cellFormatters[index] = make(map[*CellFormatterCallback][]CellCondition)
+	}
+	t.cellFormatters[index][&cb] = conditions
+}
+
+func (t *AsciiTable) conditionsAreMet(list ...CellCondition) bool {
+	if list == nil {
+		return true
+	}
+	flags := make([]bool, len(list))
+	for i, c := range list {
+		if c.RowIndex >= len(t.rows) {
+			continue
+		}
+		if c.CellIndex >= len(t.rows[c.RowIndex]) {
+			continue
+		}
+
+		switch c.Operator {
+		case Equals:
+			flags[i] = c.Value == t.rows[c.RowIndex][c.CellIndex]
+		case NotEquals:
+			flags[i] = c.Value != t.rows[c.RowIndex][c.CellIndex]
+		case GreaterThan:
+			v0, e0 := strconv.Atoi(c.Value)
+			v1, e1 := strconv.Atoi(t.rows[c.RowIndex][c.CellIndex])
+			if e0 == nil && e1 == nil {
+				flags[i] = v0 < v1
+			}
+		case LowerThan:
+			v0, e0 := strconv.Atoi(c.Value)
+			v1, e1 := strconv.Atoi(t.rows[c.RowIndex][c.CellIndex])
+			if e0 == nil && e1 == nil {
+				flags[i] = v0 > v1
+			}
+		}
+
+	}
+
+	for _, f := range flags {
+		if !f {
+			return false
+		}
+	}
+	return true
 }
 
 func New(cellWidth uint, addRowDiv bool, dest *os.File) *AsciiTable {

@@ -2,6 +2,7 @@ package table
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 	"os"
 	"testing"
@@ -84,6 +85,60 @@ func TestTableWithTruncatedCells(t *testing.T) {
 		"|       1 |       2 |               3 |\n" +
 		"+---------+---------+-----------------+\n" +
 		"|         |         |       Total:... |\n" +
+		"+---------+---------+-----------------+\n"
+
+	assert.Equal(t, expectedStr, str)
+}
+
+func TestTableWithFormmatters(t *testing.T) {
+
+	r, w, e := os.Pipe()
+	assert.Nil(t, e)
+
+	tb := New(8, false, w)
+	tb.SetTruncateAllCells(true)
+	tb.AddHeader([]string{"h1", "h2"})
+	tb.AddRow([]string{"1", "2", "3"})
+	tb.AddFooter([]string{"Total: something"})
+
+	cb := func(i int, text string) string {
+		return fmt.Sprintf("%s!", text)
+	}
+
+	tb.SetCellFormmatter(
+		2,
+		cb,
+		CellCondition{RowIndex: 0, CellIndex: 0, Value: "1"},
+		CellCondition{RowIndex: 0, CellIndex: 2, Value: "3"},
+		CellCondition{RowIndex: 0, CellIndex: 0, Value: "2", Operator: LowerThan},
+		CellCondition{RowIndex: 0, CellIndex: 2, Value: "2", Operator: GreaterThan},
+		CellCondition{RowIndex: 0, CellIndex: 2, Value: "4", Operator: NotEquals},
+	)
+
+	assert.Nil(t, tb.Display())
+
+	assert.Nil(t, e)
+
+	out := make(chan string)
+	go func(t *testing.T) {
+		for {
+			var buf bytes.Buffer
+			io.Copy(&buf, r)
+			out <- buf.String()
+		}
+	}(t)
+
+	w.Close()
+	str := <-out
+	t.Log("\n\n" + str)
+
+	expectedStr := "" +
+		"+---------+---------+-----------------+\n" +
+		"|      h1 |      h2 |                 |\n" +
+		"+---------+---------+-----------------+\n" +
+		"|       1 |       2 |               3 |\n" +
+		"+---------+---------+-----------------+\n" +
+		"|         |         |      Total:...! |\n" +
 		"+---------+---------+-----------------+\n"
 
 	assert.Equal(t, expectedStr, str)
