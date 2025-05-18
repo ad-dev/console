@@ -301,7 +301,6 @@ func (t *AsciiTable) SetDefaultPadding(p padding) {
 
 func (t *AsciiTable) SetTruncateAllCells(flag bool) {
 	t.truncateAllCells = flag
-	print("yo", t.truncateAllCells)
 
 }
 
