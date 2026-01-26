@@ -19,7 +19,7 @@ func TestTable(t *testing.T) {
 	tb.SetTruncateAllCells(true) // enable cells truncation
 	tb.SetCellTruncate(2, false) // but disable it for 3rd column
 	tb.AddHeader([]string{"h1", "h2"})
-	tb.AddRow([]string{"1", "2", "3"})
+	tb.AddRow([]string{"1", "2", "3\n42"})
 	tb.AddFooter([]string{"Total: something"})
 	assert.Nil(t, tb.Display())
 
@@ -43,6 +43,7 @@ func TestTable(t *testing.T) {
 		"|      h1 |      h2 |                 |\n" +
 		"+---------+---------+-----------------+\n" +
 		"|       1 |       2 |               3 |\n" +
+		"|         |         |              42 |\n" +
 		"+---------+---------+-----------------+\n" +
 		"|         |         |Total: something |\n" +
 		"+---------+---------+-----------------+\n"

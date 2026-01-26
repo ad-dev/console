@@ -14,8 +14,11 @@ type padding byte
 type Hex = uint64
 
 const (
-	PAD_LEFT  padding = 1
-	PAD_RIGHT padding = 2
+	PAD_LEFT  padding = 2
+	PAD_RIGHT padding = 4
+
+	ALIGN_TOP    padding = 8
+	ALIGN_BOTTOM padding = 16
 )
 
 type AsciiTable struct {
@@ -207,7 +210,10 @@ func (t *AsciiTable) formatCell(j int, str string) string {
 
 func (t *AsciiTable) displayRow(row []string, cellWidths []uint, p padding) {
 	var pd padding
-	fmt.Fprint(t.dest, "|")
+	noMultiCellsInARow := !t.doesRowContainMultilineCells(row)
+	if noMultiCellsInARow {
+		fmt.Fprint(t.dest, "|")
+	}
 	for j := range row {
 		cellWidth := cellWidths[0]
 		if len(cellWidths) == len(row) {
@@ -215,18 +221,48 @@ func (t *AsciiTable) displayRow(row []string, cellWidths []uint, p padding) {
 		}
 		pd = p
 
-		if j < len(t.paddings) && (t.paddings[j] == PAD_LEFT || t.paddings[j] == PAD_RIGHT) {
-			pd = t.paddings[j]
+		if j < len(t.paddings) && (t.paddings[j]&PAD_LEFT == PAD_LEFT || t.paddings[j]&PAD_RIGHT == PAD_RIGHT) {
+			p = t.paddings[j]
 		}
 
-		if pd == PAD_LEFT {
-			fmt.Fprintf(t.dest, "%-"+strconv.Itoa(int(cellWidth))+"s |", t.formatCell(j, row[j]))
-		} else {
-			fmt.Fprintf(t.dest, "%"+strconv.Itoa(int(cellWidth))+"s |", t.formatCell(j, row[j]))
+		lines := strings.Split(row[j], "\n")
+		linesCount := len(lines)
+		if linesCount > 1 {
+			for lIdx, line := range lines {
+				mlRow := row
+				for i := range row {
+					if (len(t.paddings) > j &&
+						((lIdx > 0 && t.paddings[j]&ALIGN_TOP == ALIGN_TOP) || (lIdx < linesCount-1 && t.paddings[j]&ALIGN_BOTTOM == ALIGN_BOTTOM))) ||
+						(len(t.paddings) == 0 && lIdx > 0) {
+						mlRow[i] = ""
+					}
+				}
+				mlRow[j] = line
+				t.displayRow(mlRow, cellWidths, pd)
+			}
+		} else if noMultiCellsInARow {
+
+			if pd&PAD_LEFT == PAD_LEFT {
+				fmt.Fprintf(t.dest, "%-"+strconv.Itoa(int(cellWidth))+"s |", t.formatCell(j, row[j]))
+			} else {
+				fmt.Fprintf(t.dest, "%"+strconv.Itoa(int(cellWidth))+"s |", t.formatCell(j, row[j]))
+			}
 		}
 
 	}
-	fmt.Fprintln(t.dest)
+	if noMultiCellsInARow {
+		fmt.Fprintln(t.dest)
+	}
+}
+
+func (t *AsciiTable) doesRowContainMultilineCells(row []string) bool {
+	for _, cell := range row {
+		if strings.Contains(cell, "\n") {
+			return true
+		}
+	}
+	return false
+
 }
 
 func (t *AsciiTable) displayBorder(rowLen int, cellWidths []uint) {
