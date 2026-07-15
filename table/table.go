@@ -39,6 +39,7 @@ type AsciiTable struct {
 func (t *AsciiTable) ClearRows() {
 	t.rows = make([][]string, 0)
 }
+
 func (t *AsciiTable) AddRow(row []string) {
 	t.rows = append(t.rows, row)
 }
@@ -141,6 +142,7 @@ func (t *AsciiTable) getMaxRowLen() int {
 	}
 	return maxRowLen
 }
+
 func (t *AsciiTable) getMaxRowCellWidth(row []string) int {
 	if len(row) == 0 {
 		return 0
@@ -153,6 +155,7 @@ func (t *AsciiTable) getMaxRowCellWidth(row []string) int {
 	}
 	return maxWidth
 }
+
 func (t *AsciiTable) getMaxCellWidth() int {
 	maxWidth := 0
 	m := 0
@@ -214,33 +217,34 @@ func (t *AsciiTable) displayRow(row []string, cellWidths []uint, p padding) {
 	if noMultiCellsInARow {
 		fmt.Fprint(t.dest, "|")
 	}
-	for j := range row {
-		cellWidth := cellWidths[0]
-		if len(cellWidths) == len(row) {
-			cellWidth = cellWidths[j]
-		}
-		pd = p
 
-		if j < len(t.paddings) && (t.paddings[j]&PAD_LEFT == PAD_LEFT || t.paddings[j]&PAD_RIGHT == PAD_RIGHT) {
-			p = t.paddings[j]
-		}
-
-		lines := strings.Split(row[j], "\n")
-		linesCount := len(lines)
-		if linesCount > 1 {
-			for lIdx, line := range lines {
-				mlRow := row
-				for i := range row {
-					if (len(t.paddings) > j &&
-						((lIdx > 0 && t.paddings[j]&ALIGN_TOP == ALIGN_TOP) || (lIdx < linesCount-1 && t.paddings[j]&ALIGN_BOTTOM == ALIGN_BOTTOM))) ||
-						(len(t.paddings) == 0 && lIdx > 0) {
-						mlRow[i] = ""
-					}
+	linesMax := t.getBiggestMultilineCell(row)
+	if linesMax > 1 {
+		mlRow := make([]string, t.getMaxRowLen())
+		copy(mlRow, row)
+		for k := range linesMax {
+			for i := range row {
+				irs := strings.Split(row[i], "\n")
+				if len(irs) > k {
+					mlRow[i] = irs[k]
+				} else {
+					mlRow[i] = ""
 				}
-				mlRow[j] = line
-				t.displayRow(mlRow, cellWidths, pd)
 			}
-		} else if noMultiCellsInARow {
+
+			t.displayRow(mlRow, cellWidths, pd)
+		}
+	} else if noMultiCellsInARow {
+		for j := range row {
+			cellWidth := cellWidths[0]
+			if len(cellWidths) == len(row) {
+				cellWidth = cellWidths[j]
+			}
+			pd = p
+
+			if j < len(t.paddings) && (t.paddings[j]&PAD_LEFT == PAD_LEFT || t.paddings[j]&PAD_RIGHT == PAD_RIGHT) {
+				p = t.paddings[j]
+			}
 
 			if pd&PAD_LEFT == PAD_LEFT {
 				fmt.Fprintf(t.dest, "%-"+strconv.Itoa(int(cellWidth))+"s |", t.formatCell(j, row[j]))
@@ -248,8 +252,8 @@ func (t *AsciiTable) displayRow(row []string, cellWidths []uint, p padding) {
 				fmt.Fprintf(t.dest, "%"+strconv.Itoa(int(cellWidth))+"s |", t.formatCell(j, row[j]))
 			}
 		}
-
 	}
+
 	if noMultiCellsInARow {
 		fmt.Fprintln(t.dest)
 	}
@@ -262,6 +266,22 @@ func (t *AsciiTable) doesRowContainMultilineCells(row []string) bool {
 		}
 	}
 	return false
+
+}
+
+func (t *AsciiTable) getBiggestMultilineCell(row []string) int {
+	var lines []string
+	linesMax := 0
+	linesCount := 0
+
+	for _, cell := range row {
+		lines = strings.Split(cell, "\n")
+		linesCount = len(lines)
+		if linesCount > linesMax {
+			linesMax = linesCount
+		}
+	}
+	return linesMax
 
 }
 
