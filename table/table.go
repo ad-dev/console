@@ -11,6 +11,8 @@ import (
 
 type padding byte
 
+type Style = map[uint]string
+
 type Hex = uint64
 
 const (
@@ -19,6 +21,14 @@ const (
 
 	ALIGN_TOP    padding = 8
 	ALIGN_BOTTOM padding = 16
+
+	DEFAULT_STYLE_CORNER            = "+"
+	DEFAULT_STYLE_BORDER_HORIZONTAL = "-"
+	DEFAULT_STYLE_BORDER_VERTICAL   = "|"
+
+	STYLE_CORNER            = 0
+	STYLE_BORDER_HORIZONTAL = 1
+	STYLE_BORDER_VERTICAL   = 2
 )
 
 type AsciiTable struct {
@@ -34,6 +44,9 @@ type AsciiTable struct {
 	truncateCells    []bool
 	truncateAllCells bool
 	cellFormatters   []map[*CellFormatterCallback][]CellCondition
+	styleHeader      Style
+	styleBody        Style
+	styleFooter      Style
 }
 
 func (t *AsciiTable) ClearRows() {
@@ -211,11 +224,11 @@ func (t *AsciiTable) formatCell(j int, str string) string {
 	return str
 }
 
-func (t *AsciiTable) displayRow(row []string, cellWidths []uint, p padding) {
+func (t *AsciiTable) displayRow(row []string, cellWidths []uint, p padding, s Style) {
 	var pd padding
 	noMultiCellsInARow := !t.doesRowContainMultilineCells(row)
 	if noMultiCellsInARow {
-		fmt.Fprint(t.dest, "|")
+		fmt.Fprint(t.dest, s[STYLE_BORDER_VERTICAL])
 	}
 
 	linesMax := t.getBiggestMultilineCell(row)
@@ -232,7 +245,7 @@ func (t *AsciiTable) displayRow(row []string, cellWidths []uint, p padding) {
 				}
 			}
 
-			t.displayRow(mlRow, cellWidths, pd)
+			t.displayRow(mlRow, cellWidths, pd, s)
 		}
 	} else if noMultiCellsInARow {
 		for j := range row {
@@ -247,9 +260,9 @@ func (t *AsciiTable) displayRow(row []string, cellWidths []uint, p padding) {
 			}
 
 			if pd&PAD_LEFT == PAD_LEFT {
-				fmt.Fprintf(t.dest, "%-"+strconv.Itoa(int(cellWidth))+"s |", t.formatCell(j, row[j]))
+				fmt.Fprintf(t.dest, "%-"+strconv.Itoa(int(cellWidth))+"s %s", t.formatCell(j, row[j]), s[STYLE_BORDER_VERTICAL])
 			} else {
-				fmt.Fprintf(t.dest, "%"+strconv.Itoa(int(cellWidth))+"s |", t.formatCell(j, row[j]))
+				fmt.Fprintf(t.dest, "%"+strconv.Itoa(int(cellWidth))+"s %s", t.formatCell(j, row[j]), s[STYLE_BORDER_VERTICAL])
 			}
 		}
 	}
@@ -285,14 +298,19 @@ func (t *AsciiTable) getBiggestMultilineCell(row []string) int {
 
 }
 
-func (t *AsciiTable) displayBorder(rowLen int, cellWidths []uint) {
-	fmt.Fprint(t.dest, "+")
+func (t *AsciiTable) displayBorder(rowLen int, cellWidths []uint, style Style) {
+	fmt.Fprint(t.dest, style[STYLE_CORNER])
 	for i := 0; i < rowLen; i++ {
 		cellWidth := cellWidths[0]
 		if len(cellWidths) == rowLen {
 			cellWidth = cellWidths[i]
 		}
-		fmt.Fprintf(t.dest, "%"+strconv.Itoa(int(cellWidth))+"s+", strings.Repeat("-", int(cellWidth+1)))
+		fmt.Fprintf(
+			t.dest,
+			"%"+strconv.Itoa(int(cellWidth))+"s%s",
+			strings.Repeat(style[STYLE_BORDER_HORIZONTAL], int(cellWidth+1)),
+			style[STYLE_CORNER],
+		)
 
 	}
 	fmt.Fprintln(t.dest)
@@ -342,24 +360,24 @@ func (t *AsciiTable) Display() error {
 
 	colWidths := t.getColWidths()
 
-	t.displayBorder(maxRowLen, colWidths)
+	t.displayBorder(maxRowLen, colWidths, t.styleHeader)
 	if len(t.header) > 0 {
-		t.displayRow(t.header, colWidths, t.defaultPadding)
-		t.displayBorder(maxRowLen, colWidths)
+		t.displayRow(t.header, colWidths, t.defaultPadding, t.styleHeader)
+		t.displayBorder(maxRowLen, colWidths, t.styleHeader)
 	}
 	for i := range t.rows {
 		t.displayRow(
 			t.alignRow(t.rows[i], maxRowLen, PAD_RIGHT),
-			colWidths, t.defaultPadding)
+			colWidths, t.defaultPadding, t.styleBody)
 		if t.addRowDiv && (i < len(t.rows)-1) {
-			t.displayBorder(maxRowLen, colWidths)
+			t.displayBorder(maxRowLen, colWidths, t.styleBody)
 		}
 	}
 	if len(t.footer) > 0 {
-		t.displayBorder(maxRowLen, colWidths)
-		t.displayRow(t.footer, colWidths, t.defaultPadding)
+		t.displayBorder(maxRowLen, colWidths, t.styleFooter)
+		t.displayRow(t.footer, colWidths, t.defaultPadding, t.styleFooter)
 	}
-	t.displayBorder(maxRowLen, colWidths)
+	t.displayBorder(maxRowLen, colWidths, t.styleFooter)
 	return nil
 }
 
@@ -492,6 +510,62 @@ func (t *AsciiTable) conditionsAreMet(list ...CellCondition) bool {
 	return true
 }
 
+func (t *AsciiTable) SetHeaderStyle(s Style) error {
+	checkStyle(s, ErrStyleHeader)
+	t.styleHeader = s
+
+	return nil
+}
+
+func (t *AsciiTable) SetBodyStyle(s Style) error {
+	checkStyle(s, ErrStyleBody)
+	t.styleBody = s
+
+	return nil
+}
+
+func (t *AsciiTable) SetFooterStyle(s Style) error {
+	checkStyle(s, ErrStyleFooter)
+	t.styleFooter = s
+
+	return nil
+}
+
+func checkStyle(s Style, err error) error {
+	if _, found := s[STYLE_CORNER]; !found {
+		return errors.Join(err, ErrStyleCornerIsUndefined)
+	}
+
+	if _, found := s[STYLE_BORDER_HORIZONTAL]; !found {
+		return errors.Join(err, ErrStyleBorderHorizontalIsUndefined)
+	}
+
+	if _, found := s[STYLE_BORDER_VERTICAL]; !found {
+		return errors.Join(err, ErrStyleBorderVerticalIsUndefined)
+	}
+	return nil
+}
+
 func New(cellWidth uint, addRowDiv bool, dest *os.File) *AsciiTable {
-	return &AsciiTable{cellWidth: cellWidth, addRowDiv: addRowDiv, dest: dest, defaultPadding: PAD_RIGHT}
+	return &AsciiTable{
+		cellWidth:      cellWidth,
+		addRowDiv:      addRowDiv,
+		dest:           dest,
+		defaultPadding: PAD_RIGHT,
+		styleHeader: Style{
+			STYLE_CORNER:            DEFAULT_STYLE_CORNER,
+			STYLE_BORDER_HORIZONTAL: DEFAULT_STYLE_BORDER_HORIZONTAL,
+			STYLE_BORDER_VERTICAL:   DEFAULT_STYLE_BORDER_VERTICAL,
+		},
+		styleBody: Style{
+			STYLE_CORNER:            DEFAULT_STYLE_CORNER,
+			STYLE_BORDER_HORIZONTAL: DEFAULT_STYLE_BORDER_HORIZONTAL,
+			STYLE_BORDER_VERTICAL:   DEFAULT_STYLE_BORDER_VERTICAL,
+		},
+		styleFooter: Style{
+			STYLE_CORNER:            DEFAULT_STYLE_CORNER,
+			STYLE_BORDER_HORIZONTAL: DEFAULT_STYLE_BORDER_HORIZONTAL,
+			STYLE_BORDER_VERTICAL:   DEFAULT_STYLE_BORDER_VERTICAL,
+		},
+	}
 }
