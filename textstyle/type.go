@@ -5,7 +5,10 @@ package textstyle
 const ESC = '\033'
 
 const (
-	StyleReset                 = 0
+	StyleReset = 0
+
+	Hyperlink = 56 // OSC8
+
 	ColorForegroundDefault     = 39
 	ColorBackgroundDefault     = 49
 	ColorForegroundBlack       = 30

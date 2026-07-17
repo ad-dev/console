@@ -19,3 +19,18 @@ func FormatString(text string, codes ...byte) string {
 	bb = append(bb, []byte{ESC, '[', '0', 'm'}...)
 	return string(bb)
 }
+
+func FormatHyperlink(url, title string) string {
+
+	bb := make([]byte, len(url)+len(title))
+	bb = append(bb[:0], []byte{ESC, ']', Hyperlink, ';', ';'}...)
+	for _, c := range url {
+		bb = append(bb, byte(c))
+	}
+	bb = append(bb, []byte{ESC, '\\'}...)
+	for _, c := range title {
+		bb = append(bb, byte(c))
+	}
+	bb = append(bb, []byte{ESC, ']', Hyperlink, ';', ';', ESC, '\\'}...)
+	return string(bb)
+}
