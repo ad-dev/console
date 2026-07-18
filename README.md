@@ -84,6 +84,6 @@ func main() {
 Links
 
 * [ANSI escape sequences](https://en.wikipedia.org/wiki/ANSI_escape_code)
-* [OSC 8](https://gist.github.com/egmontkob/eb114294efbcd5adb1944c9f3cb5feda);
+* [OSC 8](https://gist.github.com/egmontkob/eb114294efbcd5adb1944c9f3cb5feda)
 * [OSC 8 adoption in terminal emulators](https://github.com/Alhadis/OSC8-Adoption/)
 * [List of terminal emulators](https://en.wikipedia.org/wiki/List_of_terminal_emulators)
