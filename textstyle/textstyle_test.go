@@ -23,3 +23,13 @@ func TestRGBColorStyle(t *testing.T) {
 	)
 	t.Log(formattedString)
 }
+
+func TestHyperlinks(t *testing.T) {
+	formattedString := FormatHyperlink("https://example.com", "This is a link")
+	assert.Equal(
+		t,
+		"\033]8;;https://example.com\033\\This is a link\033]8;;\033\\",
+		formattedString,
+	)
+	t.Log(formattedString)
+}

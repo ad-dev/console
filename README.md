@@ -57,4 +57,33 @@ func main() {
 
 ![textstyle](images/textstyle_formatstring.png)
 
-More about [ANSI escape sequences](https://en.wikipedia.org/wiki/ANSI_escape_code)
+## FormatHyperlink(...)
+
+```go
+package main
+
+import (
+	"fmt"
+
+	"github.com/ad-dev/console/textstyle"
+)
+
+func main() {
+	fmt.Println(
+		textstyle.FormatHyperlink("https://example.com", "This is a link"),
+	)
+}
+```
+
+## Output
+
+```
+\033]8;;https://example.com\033\\This is a link\033]8;;\033\\
+```
+
+Links
+
+* [ANSI escape sequences](https://en.wikipedia.org/wiki/ANSI_escape_code)
+* [OSC 8](https://gist.github.com/egmontkob/eb114294efbcd5adb1944c9f3cb5feda);
+* [OSC 8 adoption in terminal emulators](https://github.com/Alhadis/OSC8-Adoption/)
+* [List of terminal emulators](https://en.wikipedia.org/wiki/List_of_terminal_emulators)
