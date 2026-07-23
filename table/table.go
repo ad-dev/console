@@ -148,9 +148,11 @@ func (t *AsciiTable) alignRow(row []string, maxLen int, p padding) []string {
 
 func (t *AsciiTable) getMaxRowLen() int {
 	maxRowLen := 0
+	l := 0
 	for _, r := range t.rows {
-		if len(r) > maxRowLen {
-			maxRowLen = len(r)
+		l = len(r)
+		if l > maxRowLen {
+			maxRowLen = l
 		}
 	}
 	return maxRowLen
