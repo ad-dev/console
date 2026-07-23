@@ -7,6 +7,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"sync"
 )
 
 type padding byte
@@ -32,6 +33,7 @@ const (
 )
 
 type AsciiTable struct {
+	sync.Mutex
 	rows             [][]string
 	header           []string
 	footer           []string
@@ -47,6 +49,7 @@ type AsciiTable struct {
 	styleHeader      Style
 	styleBody        Style
 	styleFooter      Style
+	customCellWidths map[int]map[int]int
 }
 
 func (t *AsciiTable) ClearRows() {
@@ -60,6 +63,7 @@ func (t *AsciiTable) AddRow(row []string) {
 func (t *AsciiTable) convertAnyRow(row []any) ([]string, error) {
 	var err error
 	r := make([]string, len(row))
+	cri := len(t.rows) - 1
 	for i, c := range row {
 		switch c := c.(type) {
 		case string:
@@ -90,6 +94,20 @@ func (t *AsciiTable) convertAnyRow(row []any) ([]string, error) {
 			r[i] = strconv.Itoa(int(c))
 		case uintptr:
 			r[i] = strconv.Itoa(int(c))
+		case CustomCellWidth:
+			r[i] = c.Content
+			t.Lock()
+
+			if t.customCellWidths == nil {
+				t.customCellWidths = make(map[int]map[int]int)
+			}
+			if t.customCellWidths[cri] == nil {
+
+				t.customCellWidths[cri] = make(map[int]int)
+			}
+			t.customCellWidths[cri][i] = c.Width
+			t.Unlock()
+
 		default:
 			err = errors.Join(err, &ErrUnsupportedCell{Index: i})
 		}
@@ -287,12 +305,20 @@ func (t *AsciiTable) displayBorder(rowLen int, cellWidths []uint, style Style) {
 func (t *AsciiTable) getColWidths() []uint {
 
 	var cellWidths = make([]uint, t.getMaxRowLen())
+	var cw int
 	for i := range cellWidths {
 		cellWidths[i] = t.cellWidth
-		for _, row := range t.rows {
-			cw := len(row[i])
-			if cw > int(cellWidths[i]) {
-				cellWidths[i] = uint(cw)
+		for ri, row := range t.rows {
+			if i < len(row) {
+				cw = len(row[i])
+				t.Lock()
+				if ccw, defined := t.customCellWidths[ri][i]; defined {
+					cw = ccw
+				}
+				t.Unlock()
+				if cw > int(cellWidths[i]) {
+					cellWidths[i] = uint(cw)
+				}
 			}
 		}
 		if len(t.header) > i {

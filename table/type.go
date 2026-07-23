@@ -15,3 +15,8 @@ type CellCondition struct {
 }
 
 type CellFormatterCallback = func(i int, text string) string
+
+type CustomCellWidth struct {
+	Content string
+	Width   int
+}
