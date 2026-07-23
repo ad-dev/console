@@ -156,19 +156,6 @@ func (t *AsciiTable) getMaxRowLen() int {
 	return maxRowLen
 }
 
-func (t *AsciiTable) getMaxRowCellWidth(row []string) int {
-	if len(row) == 0 {
-		return 0
-	}
-	maxWidth := len(row[0])
-	for _, c := range row {
-		if len(c) > maxWidth {
-			maxWidth = len(c)
-		}
-	}
-	return maxWidth
-}
-
 func (t *AsciiTable) formatCell(j int, str string) string {
 
 	if t.cellWidth < 1 || len(str) < int(t.cellWidth)-1 {
