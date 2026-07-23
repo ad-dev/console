@@ -169,27 +169,6 @@ func (t *AsciiTable) getMaxRowCellWidth(row []string) int {
 	return maxWidth
 }
 
-func (t *AsciiTable) getMaxCellWidth() int {
-	maxWidth := 0
-	m := 0
-	for _, row := range t.rows {
-		m = t.getMaxRowCellWidth(row)
-		if m > maxWidth {
-			maxWidth = m
-		}
-	}
-	m = t.getMaxRowCellWidth(t.header)
-	if m > maxWidth {
-		maxWidth = m
-	}
-	m = t.getMaxRowCellWidth(t.footer)
-	if m > maxWidth {
-		maxWidth = m
-	}
-
-	return maxWidth
-}
-
 func (t *AsciiTable) formatCell(j int, str string) string {
 
 	if t.cellWidth < 1 || len(str) < int(t.cellWidth)-1 {
