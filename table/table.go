@@ -63,7 +63,7 @@ func (t *AsciiTable) AddRow(row []string) {
 func (t *AsciiTable) convertAnyRow(row []any) ([]string, error) {
 	var err error
 	r := make([]string, len(row))
-	cri := len(t.rows) - 1
+	cri := len(t.rows)
 	for i, c := range row {
 		switch c := c.(type) {
 		case string:
@@ -303,7 +303,6 @@ func (t *AsciiTable) displayBorder(rowLen int, cellWidths []uint, style Style) {
 }
 
 func (t *AsciiTable) getColWidths() []uint {
-
 	var cellWidths = make([]uint, t.getMaxRowLen())
 	var cw int
 	for i := range cellWidths {
