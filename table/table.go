@@ -253,7 +253,7 @@ func (t *AsciiTable) displayRow(originalRowIndex int, row []string, cellWidths [
 			padding := int(cellWidth) - formattedCellLen
 
 			if pd&PAD_LEFT == PAD_LEFT {
-				fmt.Fprintf(t.dest, "%s%s %s", t.formatCell(j, row[j]), strings.Repeat(" ", padding), s[STYLE_BORDER_VERTICAL])
+				fmt.Fprintf(t.dest, "%s%s %s", formattedCell, strings.Repeat(" ", padding), s[STYLE_BORDER_VERTICAL])
 			} else {
 				fmt.Fprintf(t.dest, "%s%s %s", strings.Repeat(" ", padding), formattedCell, s[STYLE_BORDER_VERTICAL])
 			}
