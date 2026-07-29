@@ -210,7 +210,7 @@ func (t *AsciiTable) formatCell(j int, str string) string {
 	return str
 }
 
-func (t *AsciiTable) displayRow(row []string, cellWidths []uint, p padding, s Style) {
+func (t *AsciiTable) displayRow(originalRowIndex int, row []string, cellWidths []uint, p padding, s Style) {
 	var pd padding
 	noMultiCellsInARow := !t.doesRowContainMultilineCells(row)
 	if noMultiCellsInARow {
@@ -231,7 +231,7 @@ func (t *AsciiTable) displayRow(row []string, cellWidths []uint, p padding, s St
 				}
 			}
 
-			t.displayRow(mlRow, cellWidths, pd, s)
+			t.displayRow(originalRowIndex, mlRow, cellWidths, pd, s)
 		}
 	} else if noMultiCellsInARow {
 		for j := range row {
@@ -245,10 +245,17 @@ func (t *AsciiTable) displayRow(row []string, cellWidths []uint, p padding, s St
 				p = t.paddings[j]
 			}
 
+			formattedCell := t.formatCell(j, row[j])
+			formattedCellLen := len(formattedCell)
+			if cl, found := t.customCellWidths[originalRowIndex][j]; found && cl < formattedCellLen {
+				formattedCellLen = cl
+			}
+			padding := int(cellWidth) - formattedCellLen
+
 			if pd&PAD_LEFT == PAD_LEFT {
-				fmt.Fprintf(t.dest, "%-"+strconv.Itoa(int(cellWidth))+"s %s", t.formatCell(j, row[j]), s[STYLE_BORDER_VERTICAL])
+				fmt.Fprintf(t.dest, "%s%s %s", t.formatCell(j, row[j]), strings.Repeat(" ", padding), s[STYLE_BORDER_VERTICAL])
 			} else {
-				fmt.Fprintf(t.dest, "%"+strconv.Itoa(int(cellWidth))+"s %s", t.formatCell(j, row[j]), s[STYLE_BORDER_VERTICAL])
+				fmt.Fprintf(t.dest, "%s%s %s", strings.Repeat(" ", padding), formattedCell, s[STYLE_BORDER_VERTICAL])
 			}
 		}
 	}
@@ -311,7 +318,7 @@ func (t *AsciiTable) getColWidths() []uint {
 			if i < len(row) {
 				cw = len(row[i])
 				t.Lock()
-				if ccw, defined := t.customCellWidths[ri][i]; defined {
+				if ccw, defined := t.customCellWidths[ri][i]; defined && ccw > cw {
 					cw = ccw
 				}
 				t.Unlock()
@@ -355,11 +362,11 @@ func (t *AsciiTable) Display() error {
 
 	t.displayBorder(maxRowLen, colWidths, t.styleHeader)
 	if len(t.header) > 0 {
-		t.displayRow(t.header, colWidths, t.defaultPadding, t.styleHeader)
+		t.displayRow(0, t.header, colWidths, t.defaultPadding, t.styleHeader)
 		t.displayBorder(maxRowLen, colWidths, t.styleHeader)
 	}
 	for i := range t.rows {
-		t.displayRow(
+		t.displayRow(i,
 			t.alignRow(t.rows[i], maxRowLen, PAD_RIGHT),
 			colWidths, t.defaultPadding, t.styleBody)
 		if t.addRowDiv && (i < len(t.rows)-1) {
@@ -368,7 +375,7 @@ func (t *AsciiTable) Display() error {
 	}
 	if len(t.footer) > 0 {
 		t.displayBorder(maxRowLen, colWidths, t.styleFooter)
-		t.displayRow(t.footer, colWidths, t.defaultPadding, t.styleFooter)
+		t.displayRow(0, t.footer, colWidths, t.defaultPadding, t.styleFooter)
 	}
 	t.displayBorder(maxRowLen, colWidths, t.styleFooter)
 	return nil
