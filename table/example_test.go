@@ -40,9 +40,19 @@ func ExampleAsciiTable_SetBodyStyle() {
 		})
 	t.SetFooterStyle(
 		table.Style{
-			table.STYLE_CORNER:            "_",
-			table.STYLE_BORDER_HORIZONTAL: "_",
-			table.STYLE_BORDER_VERTICAL:   ":",
+			table.STYLE_CORNER:              "_",
+			table.STYLE_CORNER_RIGHT:        "_",
+			table.STYLE_CORNER_BOTTOM:       "_",
+			table.STYLE_CORNER_BOTTOM_RIGHT: "_",
+			table.STYLE_CORNER_JOINT_RIGHT:  "_",
+
+			table.STYLE_BORDER_HORIZONTAL:   "_",
+			table.STYLE_BORDER_VERTICAL:     ":",
+			table.STYLE_BORDER_JOINT:        "_",
+			table.STYLE_BORDER_JOINT_LEFT:   "_",
+			table.STYLE_BORDER_JOINT_RIGHT:  "_",
+			table.STYLE_BORDER_JOINT_BOTTOM: "_",
+			table.STYLE_BORDER_JOINT_TOP:    "_",
 		})
 	t.Display()
 

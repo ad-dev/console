@@ -23,13 +23,31 @@ const (
 	ALIGN_TOP    padding = 8
 	ALIGN_BOTTOM padding = 16
 
-	DEFAULT_STYLE_CORNER            = "+"
-	DEFAULT_STYLE_BORDER_HORIZONTAL = "-"
-	DEFAULT_STYLE_BORDER_VERTICAL   = "|"
+	DEFAULT_STYLE_CORNER              = "+"
+	DEFAULT_STYLE_CORNER_RIGHT        = "+"
+	DEFAULT_STYLE_CORNER_BOTTOM       = "+"
+	DEFAULT_STYLE_CORNER_BOTTOM_RIGHT = "+"
+	DEFAULT_STYLE_CORNER_JOINT_RIGHT  = "+"
+	DEFAULT_STYLE_BORDER_HORIZONTAL   = "-"
+	DEFAULT_STYLE_BORDER_VERTICAL     = "|"
+	DEFAULT_STYLE_BORDER_JOINT        = "+"
+	DEFAULT_STYLE_BORDER_JOINT_LEFT   = "+"
+	DEFAULT_STYLE_BORDER_JOINT_RIGHT  = "+"
+	DEFAULT_STYLE_BORDER_JOINT_TOP    = "+"
+	DEFAULT_STYLE_BORDER_JOINT_BOTTOM = "+"
 
-	STYLE_CORNER            = 0
-	STYLE_BORDER_HORIZONTAL = 1
-	STYLE_BORDER_VERTICAL   = 2
+	STYLE_CORNER              = 1
+	STYLE_CORNER_RIGHT        = 2
+	STYLE_CORNER_BOTTOM       = 3
+	STYLE_CORNER_BOTTOM_RIGHT = 4
+	STYLE_CORNER_JOINT_RIGHT  = 6
+	STYLE_BORDER_HORIZONTAL   = 7
+	STYLE_BORDER_VERTICAL     = 8
+	STYLE_BORDER_JOINT        = 9
+	STYLE_BORDER_JOINT_LEFT   = 10
+	STYLE_BORDER_JOINT_RIGHT  = 11
+	STYLE_BORDER_JOINT_TOP    = 12
+	STYLE_BORDER_JOINT_BOTTOM = 13
 )
 
 type AsciiTable struct {
@@ -291,18 +309,46 @@ func (t *AsciiTable) getBiggestMultilineCell(row []string) int {
 
 }
 
-func (t *AsciiTable) displayBorder(rowLen int, cellWidths []uint, style Style) {
-	fmt.Fprint(t.dest, style[STYLE_CORNER])
+func (t *AsciiTable) displayBorder(originalRowNo, rowLen int, cellWidths []uint, style Style) {
+	rc := len(t.rows)
+
+	cornerStyle := style[STYLE_BORDER_JOINT_LEFT]
+	if originalRowNo == 0 {
+		cornerStyle = style[STYLE_CORNER]
+	} else if originalRowNo == rc {
+		cornerStyle = style[STYLE_CORNER_BOTTOM]
+	}
+
+	cornerStyleRight := style[STYLE_BORDER_JOINT]
+	if originalRowNo == rc {
+		cornerStyleRight = style[STYLE_BORDER_JOINT_BOTTOM]
+	}
+
+	fmt.Fprint(t.dest, cornerStyle)
+
 	for i := 0; i < rowLen; i++ {
 		cellWidth := cellWidths[0]
 		if len(cellWidths) == rowLen {
 			cellWidth = cellWidths[i]
 		}
+
+		if i == rowLen-1 && originalRowNo < rc {
+			cornerStyleRight = style[STYLE_BORDER_JOINT_RIGHT]
+		} else if i == rowLen-1 && originalRowNo == rc {
+			cornerStyleRight = style[STYLE_CORNER_BOTTOM_RIGHT]
+		}
+
+		if originalRowNo == 0 && i == rowLen-1 {
+			cornerStyleRight = style[STYLE_CORNER_RIGHT]
+		} else if originalRowNo == 0 {
+			cornerStyleRight = style[STYLE_BORDER_JOINT_TOP]
+		}
+
 		fmt.Fprintf(
 			t.dest,
 			"%"+strconv.Itoa(int(cellWidth))+"s%s",
 			strings.Repeat(style[STYLE_BORDER_HORIZONTAL], int(cellWidth+1)),
-			style[STYLE_CORNER],
+			cornerStyleRight,
 		)
 
 	}
@@ -360,24 +406,25 @@ func (t *AsciiTable) Display() error {
 
 	colWidths := t.getColWidths()
 
-	t.displayBorder(maxRowLen, colWidths, t.styleHeader)
+	t.displayBorder(0, maxRowLen, colWidths, t.styleHeader)
 	if len(t.header) > 0 {
 		t.displayRow(0, t.header, colWidths, t.defaultPadding, t.styleHeader)
-		t.displayBorder(maxRowLen, colWidths, t.styleHeader)
+		t.displayBorder(1, maxRowLen, colWidths, t.styleHeader)
 	}
 	for i := range t.rows {
 		t.displayRow(i,
 			t.alignRow(t.rows[i], maxRowLen, PAD_RIGHT),
 			colWidths, t.defaultPadding, t.styleBody)
 		if t.addRowDiv && (i < len(t.rows)-1) {
-			t.displayBorder(maxRowLen, colWidths, t.styleBody)
+			t.displayBorder(i+1, maxRowLen, colWidths, t.styleBody)
 		}
 	}
+	rc := len(t.rows)
 	if len(t.footer) > 0 {
-		t.displayBorder(maxRowLen, colWidths, t.styleFooter)
-		t.displayRow(0, t.footer, colWidths, t.defaultPadding, t.styleFooter)
+		t.displayBorder(rc-1, maxRowLen, colWidths, t.styleFooter)
+		t.displayRow(rc-1, t.footer, colWidths, t.defaultPadding, t.styleFooter)
 	}
-	t.displayBorder(maxRowLen, colWidths, t.styleFooter)
+	t.displayBorder(rc, maxRowLen, colWidths, t.styleFooter)
 	return nil
 }
 
@@ -547,25 +594,32 @@ func checkStyle(s Style, err error) error {
 }
 
 func New(cellWidth uint, addRowDiv bool, dest *os.File) *AsciiTable {
+	commonStyle := Style{
+		STYLE_CORNER:              DEFAULT_STYLE_CORNER,
+		STYLE_CORNER_RIGHT:        DEFAULT_STYLE_CORNER_RIGHT,
+		STYLE_CORNER_BOTTOM:       DEFAULT_STYLE_CORNER_BOTTOM,
+		STYLE_CORNER_BOTTOM_RIGHT: DEFAULT_STYLE_CORNER_BOTTOM_RIGHT,
+		STYLE_CORNER_JOINT_RIGHT:  DEFAULT_STYLE_CORNER_JOINT_RIGHT,
+		STYLE_BORDER_HORIZONTAL:   DEFAULT_STYLE_BORDER_HORIZONTAL,
+		STYLE_BORDER_VERTICAL:     DEFAULT_STYLE_BORDER_VERTICAL,
+		STYLE_BORDER_JOINT:        DEFAULT_STYLE_BORDER_JOINT,
+		STYLE_BORDER_JOINT_LEFT:   DEFAULT_STYLE_BORDER_JOINT_LEFT,
+		STYLE_BORDER_JOINT_RIGHT:  DEFAULT_STYLE_BORDER_JOINT_RIGHT,
+		STYLE_BORDER_JOINT_TOP:    DEFAULT_STYLE_BORDER_JOINT_TOP,
+		STYLE_BORDER_JOINT_BOTTOM: DEFAULT_STYLE_BORDER_JOINT_BOTTOM,
+	}
+
 	return &AsciiTable{
 		cellWidth:      cellWidth,
 		addRowDiv:      addRowDiv,
 		dest:           dest,
 		defaultPadding: PAD_RIGHT,
-		styleHeader: Style{
-			STYLE_CORNER:            DEFAULT_STYLE_CORNER,
-			STYLE_BORDER_HORIZONTAL: DEFAULT_STYLE_BORDER_HORIZONTAL,
-			STYLE_BORDER_VERTICAL:   DEFAULT_STYLE_BORDER_VERTICAL,
-		},
+		styleHeader:    commonStyle,
 		styleBody: Style{
 			STYLE_CORNER:            DEFAULT_STYLE_CORNER,
 			STYLE_BORDER_HORIZONTAL: DEFAULT_STYLE_BORDER_HORIZONTAL,
 			STYLE_BORDER_VERTICAL:   DEFAULT_STYLE_BORDER_VERTICAL,
 		},
-		styleFooter: Style{
-			STYLE_CORNER:            DEFAULT_STYLE_CORNER,
-			STYLE_BORDER_HORIZONTAL: DEFAULT_STYLE_BORDER_HORIZONTAL,
-			STYLE_BORDER_VERTICAL:   DEFAULT_STYLE_BORDER_VERTICAL,
-		},
+		styleFooter: commonStyle,
 	}
 }
