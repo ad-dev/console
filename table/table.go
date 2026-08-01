@@ -18,37 +18,37 @@ type Style = map[uint]string
 type Hex = uint64
 
 const (
-	PAD_LEFT  padding = 2
-	PAD_RIGHT padding = 4
+	PadLeft  padding = 2
+	PadRight padding = 4
 
-	ALIGN_TOP    padding = 8
-	ALIGN_BOTTOM padding = 16
+	AlignTop    padding = 8
+	AlignBottom padding = 16
 
-	DEFAULT_STYLE_CORNER              = "+"
-	DEFAULT_STYLE_CORNER_RIGHT        = "+"
-	DEFAULT_STYLE_CORNER_BOTTOM       = "+"
-	DEFAULT_STYLE_CORNER_BOTTOM_RIGHT = "+"
-	DEFAULT_STYLE_CORNER_JOINT_RIGHT  = "+"
-	DEFAULT_STYLE_BORDER_HORIZONTAL   = "-"
-	DEFAULT_STYLE_BORDER_VERTICAL     = "|"
-	DEFAULT_STYLE_BORDER_JOINT        = "+"
-	DEFAULT_STYLE_BORDER_JOINT_LEFT   = "+"
-	DEFAULT_STYLE_BORDER_JOINT_RIGHT  = "+"
-	DEFAULT_STYLE_BORDER_JOINT_TOP    = "+"
-	DEFAULT_STYLE_BORDER_JOINT_BOTTOM = "+"
+	DefaultStyleCorner            = "+"
+	DefaultStyleCornerRight       = "+"
+	DefaultStyleCornerBottom      = "+"
+	DefaultStyleCornerBottomRight = "+"
+	DefaultStyleCornerJointRight  = "+"
+	DefaultStyleBorderHorizontal  = "-"
+	DefaultStyleBorderVertical    = "|"
+	DefaultStyleBorderJoint       = "+"
+	DefaultStyleBorderJointLeft   = "+"
+	DefaultStyleBorderJointRight  = "+"
+	DefaultStyleBorderJointTop    = "+"
+	DefaultStyleBorderJointBottom = "+"
 
-	STYLE_CORNER              = 1
-	STYLE_CORNER_RIGHT        = 2
-	STYLE_CORNER_BOTTOM       = 3
-	STYLE_CORNER_BOTTOM_RIGHT = 4
-	STYLE_CORNER_JOINT_RIGHT  = 6
-	STYLE_BORDER_HORIZONTAL   = 7
-	STYLE_BORDER_VERTICAL     = 8
-	STYLE_BORDER_JOINT        = 9
-	STYLE_BORDER_JOINT_LEFT   = 10
-	STYLE_BORDER_JOINT_RIGHT  = 11
-	STYLE_BORDER_JOINT_TOP    = 12
-	STYLE_BORDER_JOINT_BOTTOM = 13
+	StyleCorner            = 1
+	StyleCornerRight       = 2
+	StyleCornerBottom      = 3
+	StyleCornerBottomRight = 4
+	StyleCornerJointRight  = 6
+	StyleBorderHorizontal  = 7
+	StyleBorderVertical    = 8
+	StyleBorderJoint       = 9
+	StyleBorderJointLeft   = 10
+	StyleBorderJointRight  = 11
+	StyleBorderJointTop    = 12
+	StyleBorderJointBottom = 13
 )
 
 type AsciiTable struct {
@@ -175,9 +175,9 @@ func (t *AsciiTable) alignRow(row []string, maxLen int, p padding) []string {
 		padding := maxLen - len(row)
 		emptyCells := make([]string, padding)
 		switch p {
-		case PAD_RIGHT:
+		case PadRight:
 			row = append(row, emptyCells...)
-		case PAD_LEFT:
+		case PadLeft:
 			row = append(emptyCells, row...)
 		}
 	}
@@ -233,7 +233,7 @@ func (t *AsciiTable) displayRow(originalRowIndex int, row []string, cellWidths [
 	var pd padding
 	noMultiCellsInARow := !t.doesRowContainMultilineCells(row)
 	if noMultiCellsInARow {
-		fmt.Fprint(t.dest, s[STYLE_BORDER_VERTICAL])
+		fmt.Fprint(t.dest, s[StyleBorderVertical])
 	}
 
 	linesMax := t.getBiggestMultilineCell(row)
@@ -260,7 +260,7 @@ func (t *AsciiTable) displayRow(originalRowIndex int, row []string, cellWidths [
 			}
 			pd = p
 
-			if j < len(t.paddings) && (t.paddings[j]&PAD_LEFT == PAD_LEFT || t.paddings[j]&PAD_RIGHT == PAD_RIGHT) {
+			if j < len(t.paddings) && (t.paddings[j]&PadLeft == PadLeft || t.paddings[j]&PadRight == PadRight) {
 				p = t.paddings[j]
 			}
 
@@ -272,10 +272,10 @@ func (t *AsciiTable) displayRow(originalRowIndex int, row []string, cellWidths [
 			}
 			padding := int(cellWidth) - formattedCellLen
 
-			if pd&PAD_LEFT == PAD_LEFT {
-				fmt.Fprintf(t.dest, "%s%s %s", formattedCell, strings.Repeat(" ", padding), s[STYLE_BORDER_VERTICAL])
+			if pd&PadLeft == PadLeft {
+				fmt.Fprintf(t.dest, "%s%s %s", formattedCell, strings.Repeat(" ", padding), s[StyleBorderVertical])
 			} else {
-				fmt.Fprintf(t.dest, "%s%s %s", strings.Repeat(" ", padding), formattedCell, s[STYLE_BORDER_VERTICAL])
+				fmt.Fprintf(t.dest, "%s%s %s", strings.Repeat(" ", padding), formattedCell, s[StyleBorderVertical])
 			}
 		}
 	}
@@ -314,16 +314,16 @@ func (t *AsciiTable) getBiggestMultilineCell(row []string) int {
 func (t *AsciiTable) displayBorder(originalRowNo, rowLen int, cellWidths []uint, style Style) {
 	rc := len(t.rows)
 
-	cornerStyle := style[STYLE_BORDER_JOINT_LEFT]
+	cornerStyle := style[StyleBorderJointLeft]
 	if originalRowNo == 0 {
-		cornerStyle = style[STYLE_CORNER]
+		cornerStyle = style[StyleCorner]
 	} else if originalRowNo == rc {
-		cornerStyle = style[STYLE_CORNER_BOTTOM]
+		cornerStyle = style[StyleCornerBottom]
 	}
 
-	cornerStyleRight := style[STYLE_BORDER_JOINT]
+	cornerStyleRight := style[StyleBorderJoint]
 	if originalRowNo == rc {
-		cornerStyleRight = style[STYLE_BORDER_JOINT_BOTTOM]
+		cornerStyleRight = style[StyleBorderJointBottom]
 	}
 
 	fmt.Fprint(t.dest, cornerStyle)
@@ -335,21 +335,21 @@ func (t *AsciiTable) displayBorder(originalRowNo, rowLen int, cellWidths []uint,
 		}
 
 		if i == rowLen-1 && originalRowNo < rc {
-			cornerStyleRight = style[STYLE_BORDER_JOINT_RIGHT]
+			cornerStyleRight = style[StyleBorderJointRight]
 		} else if i == rowLen-1 && originalRowNo == rc {
-			cornerStyleRight = style[STYLE_CORNER_BOTTOM_RIGHT]
+			cornerStyleRight = style[StyleCornerBottomRight]
 		}
 
 		if originalRowNo == 0 && i == rowLen-1 {
-			cornerStyleRight = style[STYLE_CORNER_RIGHT]
+			cornerStyleRight = style[StyleCornerRight]
 		} else if originalRowNo == 0 {
-			cornerStyleRight = style[STYLE_BORDER_JOINT_TOP]
+			cornerStyleRight = style[StyleBorderJointTop]
 		}
 
 		fmt.Fprintf(
 			t.dest,
 			"%"+strconv.Itoa(int(cellWidth))+"s%s",
-			strings.Repeat(style[STYLE_BORDER_HORIZONTAL], int(cellWidth+1)),
+			strings.Repeat(style[StyleBorderHorizontal], int(cellWidth+1)),
 			cornerStyleRight,
 		)
 
@@ -399,11 +399,11 @@ func (t *AsciiTable) Display() error {
 	maxRowLen := t.getMaxRowLen()
 
 	if len(t.header) > 0 {
-		t.header = t.alignRow(t.header, t.getMaxRowLen(), PAD_RIGHT)
+		t.header = t.alignRow(t.header, t.getMaxRowLen(), PadRight)
 	}
 
 	if len(t.footer) > 0 {
-		t.footer = t.alignRow(t.footer, t.getMaxRowLen(), PAD_LEFT)
+		t.footer = t.alignRow(t.footer, t.getMaxRowLen(), PadLeft)
 	}
 
 	colWidths := t.getColWidths()
@@ -415,7 +415,7 @@ func (t *AsciiTable) Display() error {
 	}
 	for i := range t.rows {
 		t.displayRow(i,
-			t.alignRow(t.rows[i], maxRowLen, PAD_RIGHT),
+			t.alignRow(t.rows[i], maxRowLen, PadRight),
 			colWidths, t.defaultPadding, t.styleBody)
 		if t.addRowDiv && (i < len(t.rows)-1) {
 			t.displayBorder(i+1, maxRowLen, colWidths, t.styleBody)
@@ -462,16 +462,16 @@ func (t *AsciiTable) getRawOutput() [][]string {
 	maxRowLen := t.getMaxRowLen()
 
 	if len(t.header) > 0 {
-		t.header = t.alignRow(t.header, t.getMaxRowLen(), PAD_RIGHT)
+		t.header = t.alignRow(t.header, t.getMaxRowLen(), PadRight)
 		output = append(output, t.header)
 	}
 
 	for i := range t.rows {
-		output = append(output, t.alignRow(t.rows[i], maxRowLen, PAD_RIGHT))
+		output = append(output, t.alignRow(t.rows[i], maxRowLen, PadRight))
 	}
 
 	if len(t.footer) > 0 {
-		t.footer = t.alignRow(t.footer, t.getMaxRowLen(), PAD_LEFT)
+		t.footer = t.alignRow(t.footer, t.getMaxRowLen(), PadLeft)
 		output = append(output, t.footer)
 	}
 	return output
@@ -613,15 +613,15 @@ func (t *AsciiTable) SetOutputDestination(d *os.File) {
 }
 
 func checkStyle(s Style, err error) error {
-	if _, found := s[STYLE_CORNER]; !found {
+	if _, found := s[StyleCorner]; !found {
 		return errors.Join(err, ErrStyleCornerIsUndefined)
 	}
 
-	if _, found := s[STYLE_BORDER_HORIZONTAL]; !found {
+	if _, found := s[StyleBorderHorizontal]; !found {
 		return errors.Join(err, ErrStyleBorderHorizontalIsUndefined)
 	}
 
-	if _, found := s[STYLE_BORDER_VERTICAL]; !found {
+	if _, found := s[StyleBorderVertical]; !found {
 		return errors.Join(err, ErrStyleBorderVerticalIsUndefined)
 	}
 	return nil
@@ -633,7 +633,7 @@ func New(cellWidth uint, addRowDiv bool, dest *os.File) *AsciiTable {
 		cellWidth:      cellWidth,
 		addRowDiv:      addRowDiv,
 		dest:           dest,
-		defaultPadding: PAD_RIGHT,
+		defaultPadding: PadRight,
 	}
 	t.SetTheme(Basic)
 	return t
