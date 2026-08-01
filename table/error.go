@@ -22,4 +22,5 @@ var (
 	ErrStyleCornerIsUndefined           = errors.New("corder style not defined")
 	ErrStyleBorderHorizontalIsUndefined = errors.New("horizontal border style is not defined")
 	ErrStyleBorderVerticalIsUndefined   = errors.New("vertical border style is not defined")
+	ErrThemeNotFound                    = errors.New("theme not found")
 )

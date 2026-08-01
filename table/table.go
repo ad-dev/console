@@ -67,6 +67,7 @@ type AsciiTable struct {
 	styleHeader      Style
 	styleBody        Style
 	styleFooter      Style
+	currentTheme     Theme
 	customCellWidths map[int]map[int]int
 }
 
@@ -578,6 +579,34 @@ func (t *AsciiTable) SetFooterStyle(s Style) error {
 	return nil
 }
 
+func (t *AsciiTable) SetTheme(th Theme) error {
+	if thm, found := themes[th]; found {
+		if x, ok := thm[Header]; ok {
+			t.SetHeaderStyle(x)
+		} else {
+			return ErrStyleHeader
+		}
+
+		if x, ok := thm[Body]; ok {
+			t.SetBodyStyle(x)
+		} else {
+			return ErrStyleHeader
+		}
+
+		if x, ok := thm[Footer]; ok {
+			t.SetFooterStyle(x)
+		} else {
+			return ErrStyleHeader
+		}
+		t.currentTheme = th
+	}
+	return ErrThemeNotFound
+}
+
+func (t *AsciiTable) Theme() Theme {
+	return t.currentTheme
+}
+
 func checkStyle(s Style, err error) error {
 	if _, found := s[STYLE_CORNER]; !found {
 		return errors.Join(err, ErrStyleCornerIsUndefined)
@@ -594,32 +623,13 @@ func checkStyle(s Style, err error) error {
 }
 
 func New(cellWidth uint, addRowDiv bool, dest *os.File) *AsciiTable {
-	commonStyle := Style{
-		STYLE_CORNER:              DEFAULT_STYLE_CORNER,
-		STYLE_CORNER_RIGHT:        DEFAULT_STYLE_CORNER_RIGHT,
-		STYLE_CORNER_BOTTOM:       DEFAULT_STYLE_CORNER_BOTTOM,
-		STYLE_CORNER_BOTTOM_RIGHT: DEFAULT_STYLE_CORNER_BOTTOM_RIGHT,
-		STYLE_CORNER_JOINT_RIGHT:  DEFAULT_STYLE_CORNER_JOINT_RIGHT,
-		STYLE_BORDER_HORIZONTAL:   DEFAULT_STYLE_BORDER_HORIZONTAL,
-		STYLE_BORDER_VERTICAL:     DEFAULT_STYLE_BORDER_VERTICAL,
-		STYLE_BORDER_JOINT:        DEFAULT_STYLE_BORDER_JOINT,
-		STYLE_BORDER_JOINT_LEFT:   DEFAULT_STYLE_BORDER_JOINT_LEFT,
-		STYLE_BORDER_JOINT_RIGHT:  DEFAULT_STYLE_BORDER_JOINT_RIGHT,
-		STYLE_BORDER_JOINT_TOP:    DEFAULT_STYLE_BORDER_JOINT_TOP,
-		STYLE_BORDER_JOINT_BOTTOM: DEFAULT_STYLE_BORDER_JOINT_BOTTOM,
-	}
 
-	return &AsciiTable{
+	t := &AsciiTable{
 		cellWidth:      cellWidth,
 		addRowDiv:      addRowDiv,
 		dest:           dest,
 		defaultPadding: PAD_RIGHT,
-		styleHeader:    commonStyle,
-		styleBody: Style{
-			STYLE_CORNER:            DEFAULT_STYLE_CORNER,
-			STYLE_BORDER_HORIZONTAL: DEFAULT_STYLE_BORDER_HORIZONTAL,
-			STYLE_BORDER_VERTICAL:   DEFAULT_STYLE_BORDER_VERTICAL,
-		},
-		styleFooter: commonStyle,
 	}
+	t.SetTheme(Basic)
+	return t
 }
