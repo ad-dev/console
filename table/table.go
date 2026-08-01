@@ -607,6 +607,10 @@ func (t *AsciiTable) Theme() Theme {
 	return t.currentTheme
 }
 
+func (t *AsciiTable) SetOutputDestination(d *os.File) {
+	t.dest = d
+}
+
 func checkStyle(s Style, err error) error {
 	if _, found := s[STYLE_CORNER]; !found {
 		return errors.Join(err, ErrStyleCornerIsUndefined)
