@@ -10,4 +10,6 @@ const (
 	Borderless Theme = iota
 	Basic
 	Smooth
+	Fancy
+	OldSchool
 )

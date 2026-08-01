@@ -45,12 +45,44 @@ var (
 		StyleBorderJointBottom: " ",
 		StyleBorderJointTop:    " ",
 	}
+
+	commonStyleFancy = Style{
+		StyleCorner:            " ",
+		StyleCornerRight:       " ",
+		StyleCornerBottom:      " ",
+		StyleCornerBottomRight: " ",
+		StyleCornerJointRight:  " ",
+		StyleBorderHorizontal:  "=",
+		StyleBorderVertical:    " ",
+		StyleBorderJoint:       " ",
+		StyleBorderJointLeft:   " ",
+		StyleBorderJointRight:  " ",
+		StyleBorderJointBottom: " ",
+		StyleBorderJointTop:    " ",
+	}
+
+	commonStyleOldSchool = Style{
+		StyleCorner:            "╔",
+		StyleCornerRight:       "╗",
+		StyleCornerBottom:      "╚",
+		StyleCornerBottomRight: "╝",
+		StyleCornerJointRight:  "╣",
+		StyleBorderHorizontal:  "═",
+		StyleBorderVertical:    "║",
+		StyleBorderJoint:       "╬",
+		StyleBorderJointLeft:   "╠",
+		StyleBorderJointRight:  "╣",
+		StyleBorderJointBottom: "╩",
+		StyleBorderJointTop:    "╦",
+	}
 )
 
 var themeNames = map[Theme]string{
 	Basic:      "ASCII",
 	Smooth:     "Smooth",
 	Borderless: "Borderless",
+	Fancy:      "Fancy",
+	OldSchool:  "Old School",
 }
 
 var (
@@ -69,6 +101,16 @@ var (
 			Header: commonStyleBorderless,
 			Body:   commonStyleBorderless,
 			Footer: commonStyleBorderless,
+		},
+		Fancy: {
+			Header: commonStyleFancy,
+			Body:   commonStyleFancy,
+			Footer: commonStyleFancy,
+		},
+		OldSchool: {
+			Header: commonStyleOldSchool,
+			Body:   commonStyleOldSchool,
+			Footer: commonStyleOldSchool,
 		},
 	}
 )
