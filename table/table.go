@@ -422,7 +422,7 @@ func (t *AsciiTable) Display() error {
 	rc := len(t.rows)
 	if len(t.footer) > 0 {
 		t.displayBorder(rc-1, maxRowLen, colWidths, t.styleFooter)
-		t.displayRow(rc-1, t.footer, colWidths, t.defaultPadding, t.styleFooter)
+		t.displayRow(rc, t.footer, colWidths, t.defaultPadding, t.styleFooter)
 	}
 	t.displayBorder(rc, maxRowLen, colWidths, t.styleFooter)
 	return nil
