@@ -408,7 +408,7 @@ func (t *AsciiTable) Display() error {
 
 	t.displayBorder(0, maxRowLen, colWidths, t.styleHeader)
 	if len(t.header) > 0 {
-		t.displayRow(0, t.header, colWidths, t.defaultPadding, t.styleHeader)
+		t.displayRow(-1, t.header, colWidths, t.defaultPadding, t.styleHeader)
 		t.displayBorder(1, maxRowLen, colWidths, t.styleHeader)
 	}
 	for i := range t.rows {
@@ -422,7 +422,7 @@ func (t *AsciiTable) Display() error {
 	rc := len(t.rows)
 	if len(t.footer) > 0 {
 		t.displayBorder(rc-1, maxRowLen, colWidths, t.styleFooter)
-		t.displayRow(rc, t.footer, colWidths, t.defaultPadding, t.styleFooter)
+		t.displayRow(-1, t.footer, colWidths, t.defaultPadding, t.styleFooter)
 	}
 	t.displayBorder(rc, maxRowLen, colWidths, t.styleFooter)
 	return nil
