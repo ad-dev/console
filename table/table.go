@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"unicode/utf8"
 )
 
 type padding byte
@@ -197,7 +198,7 @@ func (t *AsciiTable) getMaxRowLen() int {
 
 func (t *AsciiTable) formatCell(j int, str string) string {
 
-	if t.cellWidth < 1 || len(str) < int(t.cellWidth)-1 {
+	if t.cellWidth < 1 || utf8.RuneCountInString(str) < int(t.cellWidth)-1 {
 		return str
 	}
 
@@ -212,7 +213,8 @@ func (t *AsciiTable) formatCell(j int, str string) string {
 	}
 
 	if truncate {
-		str = fmt.Sprintf("%s...", strings.TrimSpace(str[:t.cellWidth-1]))
+		tr := []rune(str)[:t.cellWidth-1]
+		str = fmt.Sprintf("%s...", strings.TrimSpace(string(tr)))
 	}
 	if j < len(t.cellFormatters) {
 		if formatters := t.cellFormatters[j]; formatters != nil {
@@ -221,10 +223,8 @@ func (t *AsciiTable) formatCell(j int, str string) string {
 				if t.conditionsAreMet(conditions...) {
 					str = f(j, str)
 				}
-
 			}
 		}
-
 	}
 	return str
 }
@@ -265,7 +265,8 @@ func (t *AsciiTable) displayRow(originalRowIndex int, row []string, cellWidths [
 			}
 
 			formattedCell := t.formatCell(j, row[j])
-			formattedCellLen := len(formattedCell)
+			formattedCellLen := utf8.RuneCountInString(formattedCell)
+
 			if cl, found := t.customCellWidths[originalRowIndex][j]; found && cl < formattedCellLen {
 				formattedCellLen = cl
 			}
