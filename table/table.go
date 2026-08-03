@@ -250,7 +250,7 @@ func (t *AsciiTable) displayRow(originalRowIndex int, row []string, cellWidths [
 				}
 			}
 
-			t.displayRow(originalRowIndex, mlRow, cellWidths, pd, s)
+			t.displayRow(originalRowIndex, mlRow, cellWidths, p, s)
 		}
 	} else if noMultiCellsInARow {
 		for j := range row {
@@ -261,7 +261,7 @@ func (t *AsciiTable) displayRow(originalRowIndex int, row []string, cellWidths [
 			pd = p
 
 			if j < len(t.paddings) && (t.paddings[j]&PadLeft == PadLeft || t.paddings[j]&PadRight == PadRight) {
-				p = t.paddings[j]
+				pd = t.paddings[j]
 			}
 
 			formattedCell := t.formatCell(j, row[j])
@@ -273,9 +273,9 @@ func (t *AsciiTable) displayRow(originalRowIndex int, row []string, cellWidths [
 			padding := int(cellWidth) - formattedCellLen
 
 			if pd&PadLeft == PadLeft {
-				fmt.Fprintf(t.dest, "%s%s %s", formattedCell, strings.Repeat(" ", padding), s[StyleBorderVertical])
-			} else {
 				fmt.Fprintf(t.dest, "%s%s %s", strings.Repeat(" ", padding), formattedCell, s[StyleBorderVertical])
+			} else {
+				fmt.Fprintf(t.dest, "%s%s %s", formattedCell, strings.Repeat(" ", padding), s[StyleBorderVertical])
 			}
 		}
 	}

@@ -13,6 +13,7 @@ func Example() {
 	t := table.New(8, false, os.Stdout)
 	t.AddHeader([]string{"h1", "h2"})
 	t.SetCellTruncate(0, true)
+	t.SetDefaultPadding(table.PadLeft)
 	t.AddRow([]string{"", "2", "3\n42\n00"})
 	t.AddRow([]string{progressbar.New(0, 5).String(), "9", "3\n02\n15"})
 
@@ -94,6 +95,7 @@ func ExampleAsciiTable_SetTheme() {
 
 	t := table.New(8, false, os.Stdout)
 	t.AddHeader([]string{"h1", "h2", "long header title lllllllllllllllllll"})
+	t.SetDefaultPadding(table.PadLeft)
 	t.AddRow([]string{"1", "2", "3\n42\n00"})
 	t.AddAnyRow([]any{table.CustomCellWidth{Content: "abc", Width: 30}})
 	t.AddFooter([]string{"Total: something"})

@@ -18,6 +18,7 @@ func TestTable(t *testing.T) {
 	tb := New(8, false, w)
 	tb.SetTruncateAllCells(true) // enable cells truncation
 	tb.SetCellTruncate(2, false) // but disable it for 3rd column
+	tb.SetDefaultPadding(PadLeft)
 	tb.AddHeader([]string{"h1", "h2"})
 	tb.AddRow([]string{"1\n56\nA", "2\nG Y", "3\n42\n00"})
 	tb.AddFooter([]string{"Total: something"})
@@ -60,6 +61,7 @@ func TestTableWithTruncatedCells(t *testing.T) {
 
 	tb := New(8, false, w)
 	tb.SetTruncateAllCells(true)
+	tb.SetDefaultPadding(PadLeft)
 	tb.AddHeader([]string{"h1", "h2"})
 	tb.AddRow([]string{"1", "2", "3"})
 	tb.AddFooter([]string{"Total: something"})
@@ -99,6 +101,7 @@ func TestTableWithFormmatters(t *testing.T) {
 
 	tb := New(8, false, w)
 	tb.SetTruncateAllCells(true)
+	tb.SetDefaultPadding(PadLeft)
 	tb.AddHeader([]string{"h1", "h2"})
 	tb.AddRow([]string{"1", "2", "3"})
 	tb.AddFooter([]string{"Total: something"})
@@ -153,6 +156,7 @@ func TestTableWithTruncatedCellsOfLastColumn(t *testing.T) {
 
 	tb := New(8, false, w)
 	tb.SetCellTruncate(2, true)
+	tb.SetDefaultPadding(PadLeft)
 	tb.AddHeader([]string{"h1", "h2"})
 	tb.AddRow([]string{"1", "2", "3"})
 	tb.AddFooter([]string{"Total: something"})
@@ -191,6 +195,7 @@ func TestGetJSON(t *testing.T) {
 	assert.Nil(t, e)
 
 	tb := New(8, false, w)
+	tb.SetDefaultPadding(PadLeft)
 	tb.AddHeader([]string{"h1", "h2"})
 	tb.AddRow([]string{"1", "2", "3"})
 	tb.AddFooter([]string{"Total: something"})

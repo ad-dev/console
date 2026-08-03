@@ -10,6 +10,7 @@ func Example() {
 
 	t := table.New(8, false, os.Stdout)
 	t.AddHeader([]string{"h1", "h2"})
+	t.SetDefaultPadding(table.PadLeft)
 	t.AddRow([]string{"1", "2", "3\n42\n00"})
 	t.AddFooter([]string{"Total: something"})
 	t.Display()
@@ -30,6 +31,7 @@ func ExampleAsciiTable_SetBodyStyle() {
 
 	t := table.New(8, false, os.Stdout)
 	t.AddHeader([]string{"h1", "h2"})
+	t.SetDefaultPadding(table.PadLeft)
 	t.AddRow([]string{"1", "2", "3\n42\n00"})
 	t.AddFooter([]string{"Total: something"})
 	t.SetBodyStyle(
