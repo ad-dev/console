@@ -84,6 +84,8 @@ func (b *bar) Inc(step float64) bool {
 	if b.percent+step <= maxPercent {
 		b.percent += step
 		return true
+	} else {
+		b.percent = maxPercent
 	}
 	return false
 }
@@ -92,6 +94,8 @@ func (b *bar) Dec(step float64) bool {
 	if b.percent-step >= minPercent {
 		b.percent -= step
 		return true
+	} else {
+		b.percent = minPercent
 	}
 	return false
 }
