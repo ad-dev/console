@@ -170,6 +170,38 @@ func (t *AsciiTable) AddAnyHeader(row []any) error {
 	return nil
 }
 
+func (t *AsciiTable) ChangeRow(index int, row []any) error {
+	r, err := t.convertAnyRow(row)
+	if err != nil {
+		return err
+	}
+	if index < len(t.rows) {
+		t.rows[index] = r
+	}
+
+	return nil
+}
+
+func (t *AsciiTable) ChangeHeader(row []any) error {
+	r, err := t.convertAnyRow(row)
+	if err != nil {
+		return err
+	}
+	t.header = r
+
+	return nil
+}
+
+func (t *AsciiTable) ChangeFooter(row []any) error {
+	r, err := t.convertAnyRow(row)
+	if err != nil {
+		return err
+	}
+	t.footer = r
+
+	return nil
+}
+
 func (t *AsciiTable) alignRow(row []string, maxLen int, p padding) []string {
 	if maxLen > len(row) {
 		padding := maxLen - len(row)
