@@ -4,6 +4,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"time"
 
@@ -17,7 +18,11 @@ func main() {
 	t := table.New(20, false, os.Stdout)
 	t.AddHeader([]string{"h1", "h2"})
 	t.SetDefaultPadding(table.PadLeft)
-
+	err := t.SetThemeByName("Smooth")
+	if err != nil {
+		log.Println(err)
+		return
+	}
 	t.AddRow([]string{"", "2", "3\n42\n00"})
 	t.AddRow([]string{pb.String(), "9", "3\n02\n15"})
 	t.AddFooter([]string{"Total: something", pb2.String()})
