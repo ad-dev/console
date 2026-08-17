@@ -632,6 +632,7 @@ func (t *AsciiTable) SetTheme(th Theme) error {
 			return ErrStyleHeader
 		}
 		t.currentTheme = th
+		return nil
 	}
 	return ErrThemeNotFound
 }
