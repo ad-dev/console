@@ -637,6 +637,15 @@ func (t *AsciiTable) SetTheme(th Theme) error {
 	return ErrThemeNotFound
 }
 
+func (t *AsciiTable) SetThemeByName(name string) error {
+	for id, n := range themeNames {
+		if n == name {
+			return t.SetTheme(id)
+		}
+	}
+	return errors.Join(ErrThemeNotFound, errors.New(name))
+}
+
 func (t *AsciiTable) Theme() Theme {
 	return t.currentTheme
 }
