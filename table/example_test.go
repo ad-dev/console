@@ -3,6 +3,7 @@ package table_test
 import (
 	"os"
 
+	"github.com/ad-dev/console"
 	"github.com/ad-dev/console/table"
 )
 
@@ -35,13 +36,13 @@ func ExampleAsciiTable_SetBodyStyle() {
 	t.AddRow([]string{"1", "2", "3\n42\n00"})
 	t.AddFooter([]string{"Total: something"})
 	t.SetBodyStyle(
-		table.Style{
+		console.Style{
 			table.StyleCorner:           "+",
 			table.StyleBorderHorizontal: " ",
 			table.StyleBorderVertical:   ".",
 		})
 	t.SetFooterStyle(
-		table.Style{
+		console.Style{
 			table.StyleCorner:            "_",
 			table.StyleCornerRight:       "_",
 			table.StyleCornerBottom:      "_",

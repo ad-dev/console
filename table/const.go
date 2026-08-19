@@ -1,13 +1,15 @@
 package table
 
+import "github.com/ad-dev/console"
+
 const (
-	Header Section = iota
+	Header console.Section = iota
 	Body
 	Footer
 )
 
 const (
-	Borderless Theme = iota
+	Borderless console.Theme = iota
 	Basic
 	Smooth
 	Fancy

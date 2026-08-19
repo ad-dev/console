@@ -101,15 +101,15 @@ func ExampleAsciiTable_SetTheme() {
 	t.AddFooter([]string{"Total: something"})
 
 	t.SetTheme(table.Basic)
-	fmt.Printf("\nTheme name: %s\n", t.Theme())
+	fmt.Printf("\nTheme name: %s\n", t.ThemeName())
 	t.Display()
 
 	t.SetTheme(table.Smooth)
-	fmt.Printf("\nTheme name: %s\n", t.Theme())
+	fmt.Printf("\nTheme name: %s\n", t.ThemeName())
 	t.Display()
 
 	t.SetTheme(table.OldSchool)
-	fmt.Printf("\nTheme name: %s\n", t.Theme())
+	fmt.Printf("\nTheme name: %s\n", t.ThemeName())
 	t.Display()
 	// Output:
 	//

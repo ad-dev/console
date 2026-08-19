@@ -1,7 +1,9 @@
 package table
 
+import "github.com/ad-dev/console"
+
 var (
-	commonStyleBasic = Style{
+	commonStyleBasic = console.Style{
 		StyleCorner:            DefaultStyleCorner,
 		StyleCornerRight:       DefaultStyleCornerRight,
 		StyleCornerBottom:      DefaultStyleCornerBottom,
@@ -16,7 +18,7 @@ var (
 		StyleBorderJointBottom: DefaultStyleBorderJointBottom,
 	}
 
-	commonStyleSmooth = Style{
+	commonStyleSmooth = console.Style{
 		StyleCorner:            "┌",
 		StyleCornerRight:       "┐",
 		StyleCornerBottom:      "└",
@@ -31,7 +33,7 @@ var (
 		StyleBorderJointTop:    "┬",
 	}
 
-	commonStyleBorderless = Style{
+	commonStyleBorderless = console.Style{
 		StyleCorner:            " ",
 		StyleCornerRight:       " ",
 		StyleCornerBottom:      " ",
@@ -46,7 +48,7 @@ var (
 		StyleBorderJointTop:    " ",
 	}
 
-	commonStyleFancy = Style{
+	commonStyleFancy = console.Style{
 		StyleCorner:            " ",
 		StyleCornerRight:       " ",
 		StyleCornerBottom:      " ",
@@ -61,7 +63,7 @@ var (
 		StyleBorderJointTop:    " ",
 	}
 
-	commonStyleOldSchool = Style{
+	commonStyleOldSchool = console.Style{
 		StyleCorner:            "╔",
 		StyleCornerRight:       "╗",
 		StyleCornerBottom:      "╚",
@@ -77,7 +79,7 @@ var (
 	}
 )
 
-var themeNames = map[Theme]string{
+var themeNames = map[console.Theme]string{
 	Basic:      "ASCII",
 	Smooth:     "Smooth",
 	Borderless: "Borderless",
@@ -86,7 +88,7 @@ var themeNames = map[Theme]string{
 }
 
 var (
-	themes = map[Theme]map[Section]Style{
+	themes = map[console.Theme]map[console.Section]console.Style{
 		Basic: {
 			Header: commonStyleBasic,
 			Body:   commonStyleBasic,

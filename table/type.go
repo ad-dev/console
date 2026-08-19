@@ -20,7 +20,3 @@ type CustomCellWidth struct {
 	Content string
 	Width   int
 }
-
-type Theme byte
-
-type Section = byte

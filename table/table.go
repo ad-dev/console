@@ -9,20 +9,19 @@ import (
 	"strings"
 	"sync"
 	"unicode/utf8"
+
+	"github.com/ad-dev/console"
+	"github.com/ad-dev/console/table/aggregator"
 )
-
-type padding byte
-
-type Style = map[uint]string
 
 type Hex = uint64
 
 const (
-	PadLeft  padding = 2
-	PadRight padding = 4
+	PadLeft  byte = 2
+	PadRight byte = 4
 
-	AlignTop    padding = 8
-	AlignBottom padding = 16
+	AlignTop    byte = 8
+	AlignBottom byte = 16
 
 	DefaultStyleCorner            = "+"
 	DefaultStyleCornerRight       = "+"
@@ -60,15 +59,15 @@ type AsciiTable struct {
 	dest             *os.File
 	cellWidth        uint
 	addRowDiv        bool
-	defaultPadding   padding
-	paddings         []padding
+	defaultPadding   byte
+	paddings         []byte
 	truncateCells    []bool
 	truncateAllCells bool
 	cellFormatters   []map[*CellFormatterCallback][]CellCondition
-	styleHeader      Style
-	styleBody        Style
-	styleFooter      Style
-	currentTheme     Theme
+	styleHeader      console.Style
+	styleBody        console.Style
+	styleFooter      console.Style
+	currentTheme     console.Theme
 	customCellWidths map[int]map[int]int
 }
 
@@ -114,6 +113,10 @@ func (t *AsciiTable) convertAnyRow(row []any) ([]string, error) {
 			r[i] = strconv.Itoa(int(c))
 		case uintptr:
 			r[i] = strconv.Itoa(int(c))
+		case float32:
+			r[i] = fmt.Sprintf("%.8f", c)
+		case float64:
+			r[i] = fmt.Sprintf("%.8f", c)
 		case CustomCellWidth:
 			r[i] = c.Content
 			t.Lock()
@@ -127,7 +130,42 @@ func (t *AsciiTable) convertAnyRow(row []any) ([]string, error) {
 			}
 			t.customCellWidths[cri][i] = c.Width
 			t.Unlock()
+		case aggregator.Aggregator:
+			stop := false
+			switch c.Type() {
+			case aggregator.Vertical:
+				data := make([]string, len(t.rows))
+				for ri, row := range t.rows {
+					data[ri] = row[i]
+				}
+				c.SetData(data)
+			case aggregator.Horizontal:
+				if i == 0 {
+					r[i] = "????"
+					stop = true
+				}
+				data := make([]string, len(row)-1)
+				for ci := 0; ci < i; ci++ {
+					data[ci] = r[ci]
+				}
 
+				c.SetData(data)
+
+			default:
+				r[i] = "????"
+				stop = true
+				break
+			}
+			if stop {
+				break
+			}
+
+			e := c.Calc()
+			if e != nil {
+				r[i] = e.Error()
+				break
+			}
+			r[i] = c.String()
 		default:
 			err = errors.Join(err, &ErrUnsupportedCell{Index: i})
 		}
@@ -202,7 +240,7 @@ func (t *AsciiTable) ChangeFooter(row []any) error {
 	return nil
 }
 
-func (t *AsciiTable) alignRow(row []string, maxLen int, p padding) []string {
+func (t *AsciiTable) alignRow(row []string, maxLen int, p byte) []string {
 	if maxLen > len(row) {
 		padding := maxLen - len(row)
 		emptyCells := make([]string, padding)
@@ -261,8 +299,8 @@ func (t *AsciiTable) formatCell(j int, str string) string {
 	return str
 }
 
-func (t *AsciiTable) displayRow(originalRowIndex int, row []string, cellWidths []uint, p padding, s Style) {
-	var pd padding
+func (t *AsciiTable) displayRow(originalRowIndex int, row []string, cellWidths []uint, p byte, s console.Style) {
+	var pd byte
 	noMultiCellsInARow := !t.doesRowContainMultilineCells(row)
 	if noMultiCellsInARow {
 		fmt.Fprint(t.dest, s[StyleBorderVertical])
@@ -343,7 +381,7 @@ func (t *AsciiTable) getBiggestMultilineCell(row []string) int {
 
 }
 
-func (t *AsciiTable) displayBorder(originalRowNo, rowLen int, cellWidths []uint, style Style) {
+func (t *AsciiTable) displayBorder(originalRowNo, rowLen int, cellWidths []uint, style console.Style) {
 	rc := len(t.rows)
 
 	cornerStyle := style[StyleBorderJointLeft]
@@ -462,7 +500,7 @@ func (t *AsciiTable) Display() error {
 	return nil
 }
 
-func (t *AsciiTable) SetDefaultPadding(p padding) {
+func (t *AsciiTable) SetDefaultPadding(p byte) {
 	t.defaultPadding = p
 
 }
@@ -479,9 +517,9 @@ func (t *AsciiTable) SetCellTruncate(col uint, flag bool) {
 	t.truncateCells[col] = flag
 }
 
-func (t *AsciiTable) SetColumnPadding(col uint, p padding) {
+func (t *AsciiTable) SetColumnPadding(col uint, p byte) {
 	if col >= uint(len(t.paddings)) {
-		t.paddings = make([]padding, col+1)
+		t.paddings = make([]byte, col+1)
 	}
 	t.paddings[col] = p
 }
@@ -591,28 +629,28 @@ func (t *AsciiTable) conditionsAreMet(list ...CellCondition) bool {
 	return true
 }
 
-func (t *AsciiTable) SetHeaderStyle(s Style) error {
+func (t *AsciiTable) SetHeaderStyle(s console.Style) error {
 	checkStyle(s, ErrStyleHeader)
 	t.styleHeader = s
 
 	return nil
 }
 
-func (t *AsciiTable) SetBodyStyle(s Style) error {
+func (t *AsciiTable) SetBodyStyle(s console.Style) error {
 	checkStyle(s, ErrStyleBody)
 	t.styleBody = s
 
 	return nil
 }
 
-func (t *AsciiTable) SetFooterStyle(s Style) error {
+func (t *AsciiTable) SetFooterStyle(s console.Style) error {
 	checkStyle(s, ErrStyleFooter)
 	t.styleFooter = s
 
 	return nil
 }
 
-func (t *AsciiTable) SetTheme(th Theme) error {
+func (t *AsciiTable) SetTheme(th console.Theme) error {
 	if thm, found := themes[th]; found {
 		if x, ok := thm[Header]; ok {
 			t.SetHeaderStyle(x)
@@ -646,7 +684,7 @@ func (t *AsciiTable) SetThemeByName(name string) error {
 	return errors.Join(ErrThemeNotFound, errors.New(name))
 }
 
-func (t *AsciiTable) Theme() Theme {
+func (t *AsciiTable) Theme() console.Theme {
 	return t.currentTheme
 }
 
@@ -654,7 +692,15 @@ func (t *AsciiTable) SetOutputDestination(d *os.File) {
 	t.dest = d
 }
 
-func checkStyle(s Style, err error) error {
+func (t *AsciiTable) GetData() ([]string, [][]string, []string, error) {
+	if len(t.rows) == 0 {
+		return nil, nil, nil, ErrNoRows
+	}
+
+	return t.header, t.rows, t.footer, nil
+}
+
+func checkStyle(s console.Style, err error) error {
 	if _, found := s[StyleCorner]; !found {
 		return errors.Join(err, ErrStyleCornerIsUndefined)
 	}

@@ -1,10 +1,12 @@
 package table
 
-import "fmt"
+import (
+	"fmt"
+)
 
-func (t Theme) String() string {
-	if x, ok := themeNames[t]; ok {
+func (t *AsciiTable) ThemeName() string {
+	if x, ok := themeNames[t.currentTheme]; ok {
 		return x
 	}
-	return fmt.Sprintf("theme #%d", t)
+	return fmt.Sprintf("theme #%d", t.currentTheme)
 }
