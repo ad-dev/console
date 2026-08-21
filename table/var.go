@@ -2,6 +2,8 @@ package table
 
 import "github.com/ad-dev/console"
 
+var _ console.Table = (*AsciiTable)(nil)
+
 var (
 	commonStyleBasic = console.Style{
 		StyleCorner:            DefaultStyleCorner,

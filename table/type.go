@@ -1,5 +1,7 @@
 package table
 
+import "github.com/ad-dev/console"
+
 const (
 	Equals byte = iota
 	NotEquals
@@ -7,16 +9,14 @@ const (
 	GreaterThan
 )
 
-type CellCondition struct {
-	RowIndex  int
-	CellIndex int
-	Operator  byte
-	Value     string
-}
-
-type CellFormatterCallback = func(i int, text string) string
-
 type CustomCellWidth struct {
 	Content string
 	Width   int
 }
+
+type location struct {
+	row int
+	col int
+}
+
+type formattersMap = map[location]map[*console.TableCellFormatterCallback][]console.TableCellCondition

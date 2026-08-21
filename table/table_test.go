@@ -7,6 +7,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/ad-dev/console"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -106,18 +107,19 @@ func TestTableWithFormmatters(t *testing.T) {
 	tb.AddRow([]string{"1", "2", "3"})
 	tb.AddFooter([]string{"Total: something"})
 
-	cb := func(i int, text string) string {
-		return fmt.Sprintf("%s!", text)
+	cb := func(tc console.TableCell) string {
+		return fmt.Sprintf("%s!", tc.Value())
 	}
 
-	tb.SetCellFormmatter(
+	tb.SetCellFormatter(
+		FooterIndex,
 		2,
 		cb,
-		CellCondition{RowIndex: 0, CellIndex: 0, Value: "1"},
-		CellCondition{RowIndex: 0, CellIndex: 2, Value: "3"},
-		CellCondition{RowIndex: 0, CellIndex: 0, Value: "2", Operator: LowerThan},
-		CellCondition{RowIndex: 0, CellIndex: 2, Value: "2", Operator: GreaterThan},
-		CellCondition{RowIndex: 0, CellIndex: 2, Value: "4", Operator: NotEquals},
+		NewCellCondition(0, 0, Equals, "1"),
+		NewCellCondition(0, 2, Equals, "3"),
+		NewCellCondition(0, 0, LowerThan, "2"),
+		NewCellCondition(0, 2, GreaterThan, "2"),
+		NewCellCondition(0, 2, NotEquals, "4"),
 	)
 
 	assert.Nil(t, tb.Display())

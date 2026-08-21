@@ -63,7 +63,7 @@ type AsciiTable struct {
 	paddings         []byte
 	truncateCells    []bool
 	truncateAllCells bool
-	cellFormatters   []map[*CellFormatterCallback][]CellCondition
+	cellFormatters   formattersMap
 	styleHeader      console.Style
 	styleBody        console.Style
 	styleFooter      console.Style
@@ -266,9 +266,9 @@ func (t *AsciiTable) getMaxRowLen() int {
 	return maxRowLen
 }
 
-func (t *AsciiTable) formatCell(j int, str string) string {
+func (t *AsciiTable) formatCell(l location, str string) string {
 
-	if t.cellWidth < 1 || utf8.RuneCountInString(str) < int(t.cellWidth)-1 {
+	if t.cellWidth < 1 {
 		return str
 	}
 
@@ -278,24 +278,24 @@ func (t *AsciiTable) formatCell(j int, str string) string {
 		truncate = true
 	}
 
-	if j < len(t.truncateCells) {
-		truncate = t.truncateCells[j]
+	if l.col < len(t.truncateCells) {
+		truncate = t.truncateCells[l.col]
 	}
 
-	if truncate {
+	if truncate && len([]rune(str)) > int(t.cellWidth) {
 		tr := []rune(str)[:t.cellWidth-1]
 		str = fmt.Sprintf("%s...", strings.TrimSpace(string(tr)))
 	}
-	if j < len(t.cellFormatters) {
-		if formatters := t.cellFormatters[j]; formatters != nil {
-			for formatter, conditions := range formatters {
-				f := *formatter
-				if t.conditionsAreMet(conditions...) {
-					str = f(j, str)
-				}
+
+	if lf, found := t.cellFormatters[l]; found {
+		for formatter, cb := range lf {
+			f := *formatter
+			if t.conditionsAreMet(cb...) {
+				str = f(NewCell(l.row, l.col, str))
 			}
 		}
 	}
+
 	return str
 }
 
@@ -334,7 +334,7 @@ func (t *AsciiTable) displayRow(originalRowIndex int, row []string, cellWidths [
 				pd = t.paddings[j]
 			}
 
-			formattedCell := t.formatCell(j, row[j])
+			formattedCell := t.formatCell(location{row: originalRowIndex, col: j}, row[j])
 			formattedCellLen := utf8.RuneCountInString(formattedCell)
 
 			if cl, found := t.customCellWidths[originalRowIndex][j]; found && cl < formattedCellLen {
@@ -480,7 +480,7 @@ func (t *AsciiTable) Display() error {
 
 	t.displayBorder(0, maxRowLen, colWidths, t.styleHeader)
 	if len(t.header) > 0 {
-		t.displayRow(-1, t.header, colWidths, t.defaultPadding, t.styleHeader)
+		t.displayRow(HeaderIndex, t.header, colWidths, t.defaultPadding, t.styleHeader)
 		t.displayBorder(1, maxRowLen, colWidths, t.styleHeader)
 	}
 	for i := range t.rows {
@@ -494,7 +494,7 @@ func (t *AsciiTable) Display() error {
 	rc := len(t.rows)
 	if len(t.footer) > 0 {
 		t.displayBorder(rc-1, maxRowLen, colWidths, t.styleFooter)
-		t.displayRow(-1, t.footer, colWidths, t.defaultPadding, t.styleFooter)
+		t.displayRow(FooterIndex, t.footer, colWidths, t.defaultPadding, t.styleFooter)
 	}
 	t.displayBorder(rc, maxRowLen, colWidths, t.styleFooter)
 	return nil
@@ -577,43 +577,53 @@ func (t *AsciiTable) PrintFormattedJSON(key string) error {
 
 }
 
-func (t *AsciiTable) SetCellFormmatter(index int, cb CellFormatterCallback, conditions ...CellCondition) {
-	if index >= len(t.cellFormatters) {
-		t.cellFormatters = make([]map[*CellFormatterCallback][]CellCondition, index+1)
+func (t *AsciiTable) SetCellFormatter(row int, col int, cb console.TableCellFormatterCallback, conditions ...console.TableCellCondition) {
+	if t.cellFormatters == nil {
+		t.cellFormatters = make(formattersMap)
 	}
-	if t.cellFormatters[index] == nil {
-		t.cellFormatters[index] = make(map[*CellFormatterCallback][]CellCondition)
+	l := location{row: row, col: col}
+	if t.cellFormatters[l] == nil {
+		t.cellFormatters[l] = make(map[*console.TableCellFormatterCallback][]console.TableCellCondition)
 	}
-	t.cellFormatters[index][&cb] = conditions
+	t.cellFormatters[l][&cb] = conditions
 }
 
-func (t *AsciiTable) conditionsAreMet(list ...CellCondition) bool {
+func (t *AsciiTable) AddCellFormatter(row int, col int, cb console.TableCellFormatterCallback, conditions ...console.TableCellCondition) {
+	l := location{row: row, col: col}
+	cf := make(formattersMap)
+	if t.cellFormatters[l] == nil {
+		t.cellFormatters[l] = make(map[*console.TableCellFormatterCallback][]console.TableCellCondition)
+	}
+	cf[l][&cb] = append(cf[l][&cb], conditions...)
+}
+
+func (t *AsciiTable) conditionsAreMet(list ...console.TableCellCondition) bool {
 	if list == nil {
 		return true
 	}
 	flags := make([]bool, len(list))
 	for i, c := range list {
-		if c.RowIndex >= len(t.rows) {
+		if c.Row() >= len(t.rows) {
 			continue
 		}
-		if c.CellIndex >= len(t.rows[c.RowIndex]) {
+		if c.Column() >= len(t.rows[c.Row()]) {
 			continue
 		}
 
-		switch c.Operator {
+		switch c.Operator() {
 		case Equals:
-			flags[i] = c.Value == t.rows[c.RowIndex][c.CellIndex]
+			flags[i] = c.Value() == t.rows[c.Row()][c.Column()]
 		case NotEquals:
-			flags[i] = c.Value != t.rows[c.RowIndex][c.CellIndex]
+			flags[i] = c.Value() != t.rows[c.Row()][c.Column()]
 		case GreaterThan:
-			v0, e0 := strconv.Atoi(c.Value)
-			v1, e1 := strconv.Atoi(t.rows[c.RowIndex][c.CellIndex])
+			v0, e0 := strconv.Atoi(c.Value().(string))
+			v1, e1 := strconv.Atoi(t.rows[c.Row()][c.Column()])
 			if e0 == nil && e1 == nil {
 				flags[i] = v0 < v1
 			}
 		case LowerThan:
-			v0, e0 := strconv.Atoi(c.Value)
-			v1, e1 := strconv.Atoi(t.rows[c.RowIndex][c.CellIndex])
+			v0, e0 := strconv.Atoi(c.Value().(string))
+			v1, e1 := strconv.Atoi(t.rows[c.Row()][c.Column()])
 			if e0 == nil && e1 == nil {
 				flags[i] = v0 > v1
 			}

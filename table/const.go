@@ -15,3 +15,8 @@ const (
 	Fancy
 	OldSchool
 )
+
+const (
+	HeaderIndex = -10
+	FooterIndex = -20
+)
