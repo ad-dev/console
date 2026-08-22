@@ -16,3 +16,25 @@ type Aggregator interface {
 	Data() []string
 	Calc() error
 }
+type float64aggr struct {
+	t byte
+	v float64
+	p int
+	d []string
+}
+
+type float64sum struct {
+	float64aggr
+}
+
+type float64avg struct {
+	float64aggr
+}
+
+type float64min struct {
+	float64aggr
+}
+
+type float64max struct {
+	float64aggr
+}

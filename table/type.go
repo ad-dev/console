@@ -1,12 +1,10 @@
 package table
 
-import "github.com/ad-dev/console"
+import (
+	"os"
+	"sync"
 
-const (
-	Equals byte = iota
-	NotEquals
-	LowerThan
-	GreaterThan
+	"github.com/ad-dev/console"
 )
 
 type CustomCellWidth struct {
@@ -20,3 +18,27 @@ type location struct {
 }
 
 type formattersMap = map[location]map[*console.TableCellFormatterCallback][]console.TableCellCondition
+
+type Hex = uint64
+
+type AsciiTable struct {
+	sync.Mutex
+	rows             [][]string
+	header           []string
+	footer           []string
+	colWidths        []uint
+	dest             *os.File
+	cellWidth        uint
+	addRowDiv        bool
+	defaultPadding   byte
+	innerCellSpacing byte
+	paddings         []byte
+	truncateCells    []bool
+	truncateAllCells bool
+	cellFormatters   formattersMap
+	styleHeader      console.Style
+	styleBody        console.Style
+	styleFooter      console.Style
+	currentTheme     console.Theme
+	customCellWidths map[int]map[int]int
+}
