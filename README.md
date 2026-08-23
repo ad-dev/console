@@ -31,6 +31,12 @@ func main () {
 +----------+----------+------------------+
 ```
 
+## live progress bar inside table demo
+
+![textstyle](images/lpb.gif)
+
+[Code](cmd/demo/liveprogressbar/main.go)
+
 # `textstyle` package
 
 ## FormatString(...)

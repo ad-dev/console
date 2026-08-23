@@ -1,5 +1,3 @@
 package aggregator
 
-
-
 var ErrUnknownResult = "???"

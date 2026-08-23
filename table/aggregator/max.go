@@ -25,6 +25,11 @@ func (fs *float64max) Calc() error {
 	return nil
 }
 
+func (fs *float64max) SetDisplayFormat(f string) Aggregator {
+	fs.df = f
+	return fs
+}
+
 func MaxVertcally() Aggregator {
 	return &float64max{float64aggr{t: Vertical}}
 }

@@ -26,6 +26,10 @@ func (fs *float64avg) SetPrecision(p int) Aggregator {
 	return fs
 }
 
+func (fs *float64avg) SetDisplayFormat(f string) Aggregator {
+	return fs.SetDisplayFormat(f)
+}
+
 func AvgVertcally() Aggregator {
 	return &float64avg{float64aggr{t: Vertical}}
 }

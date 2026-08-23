@@ -25,6 +25,11 @@ func (fs *float64min) Calc() error {
 	return nil
 }
 
+func (fs *float64min) SetDisplayFormat(f string) Aggregator {
+	fs.df = f
+	return fs
+}
+
 func MinVertcally() Aggregator {
 	return &float64min{float64aggr{t: Vertical}}
 }

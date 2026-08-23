@@ -1,6 +1,7 @@
 package aggregator
 
 import (
+	"fmt"
 	"strconv"
 )
 
@@ -20,15 +21,14 @@ func (fs *float64aggr) Data() []string {
 	return fs.d
 }
 
-func (fs *float64aggr) SetPrecision(p int) *float64aggr {
-	fs.p = p
-	return fs
-}
-
 func (fs *float64aggr) Calc(p int) error {
 	return nil
 }
 
 func (fs *float64aggr) String() string {
-	return strconv.FormatFloat(fs.v, 'f', fs.p, bitSize)
+	vStr := strconv.FormatFloat(fs.v, 'f', fs.p, bitSize)
+	if fs.df != "" {
+		return fmt.Sprintf(fs.df, vStr)
+	}
+	return vStr
 }

@@ -15,12 +15,14 @@ type Aggregator interface {
 	SetData([]string)
 	Data() []string
 	Calc() error
+	SetDisplayFormat(string) Aggregator
 }
 type float64aggr struct {
-	t byte
-	v float64
-	p int
-	d []string
+	t  byte
+	v  float64
+	p  int
+	df string
+	d  []string
 }
 
 type float64sum struct {

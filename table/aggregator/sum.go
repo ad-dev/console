@@ -2,6 +2,7 @@ package aggregator
 
 import (
 	"strconv"
+	"strings"
 )
 
 func (fs *float64sum) SetPrecision(p int) Aggregator {
@@ -11,13 +12,30 @@ func (fs *float64sum) SetPrecision(p int) Aggregator {
 
 func (fs *float64sum) Calc() error {
 	for _, v := range fs.d {
-		fv, err := strconv.ParseFloat(v, bitSize)
-		if err != nil {
-			return err
+		v = strings.TrimSpace(v)
+		if v == "" {
+			continue
 		}
-		fs.v += fv
+		parts := strings.Split(v, "\n")
+		for _, part := range parts {
+			part = strings.TrimSpace(part)
+			if part == "" {
+				continue
+			}
+			fv, err := strconv.ParseFloat(part, bitSize)
+			if err != nil {
+				return err
+			}
+			fs.v += fv
+
+		}
 	}
 	return nil
+}
+
+func (fs *float64sum) SetDisplayFormat(f string) Aggregator {
+	fs.df = f
+	return fs
 }
 
 func SumVertcally() Aggregator {

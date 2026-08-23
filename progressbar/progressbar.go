@@ -12,12 +12,14 @@ const (
 	minPercent = 0
 	maxPercent = 100
 
-	threshold_almost = 0.5
+	thresholdAlmost = 0.5
 
-	empty           = "░"
-	below_threshold = "▒"
-	above_trheshold = "▓"
-	full            = "█"
+	hidePercentageInfo = false
+
+	empty          = "░"
+	belowThreshold = "▒"
+	aboveTrheshold = "▓"
+	full           = "█"
 )
 
 type Bar interface {
@@ -27,12 +29,14 @@ type Bar interface {
 	Inc(float64) bool
 	Dec(float64) bool
 	Percentage() float64
+	HidePercentageInfo(bool)
 	Reset()
 }
 
 type bar struct {
-	percent float64
-	len     int
+	percent            float64
+	len                int
+	hidePercentageInfo bool
 }
 
 func (b *bar) String() string {
@@ -53,10 +57,10 @@ func (b *bar) String() string {
 
 	tb := ""
 	if int(math.Floor(fpl)) != int(math.Ceil(fpl)) {
-		tb = below_threshold
+		tb = belowThreshold
 		el--
-		if fpl-math.Floor(fpl) > threshold_almost {
-			tb = above_trheshold
+		if fpl-math.Floor(fpl) > thresholdAlmost {
+			tb = aboveTrheshold
 		}
 	}
 
@@ -65,7 +69,11 @@ func (b *bar) String() string {
 		el = 0
 	}
 
-	return fmt.Sprintf("%s%s%s %.2f", strings.Repeat(full, pl), tb, strings.Repeat(empty, el), b.percent) + "%"
+	barStr := fmt.Sprintf("%s%s%s", strings.Repeat(full, pl), tb, strings.Repeat(empty, el))
+	if !b.hidePercentageInfo {
+		barStr += fmt.Sprintf("%7s%%", fmt.Sprintf("%.2f", b.percent))
+	}
+	return barStr
 }
 
 func (b *bar) IsComplete() bool {
@@ -108,6 +116,10 @@ func (b *bar) Reset() {
 	b.percent = 0
 }
 
+func (b *bar) HidePercentageInfo(f bool) {
+	b.hidePercentageInfo = f
+}
+
 func New(p float64, l int) Bar {
-	return &bar{percent: p, len: l}
+	return &bar{percent: p, len: l, hidePercentageInfo: hidePercentageInfo}
 }

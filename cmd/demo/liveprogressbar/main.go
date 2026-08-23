@@ -10,20 +10,26 @@ import (
 
 	"github.com/ad-dev/console/progressbar"
 	"github.com/ad-dev/console/table"
+	"github.com/ad-dev/console/table/aggregator"
 )
 
 func main() {
 	pb := progressbar.New(0, 10)
 	pb2 := progressbar.New(0, 5)
+	pb2.HidePercentageInfo(true)
+
 	t := table.New(20, false, os.Stdout)
-	t.AddHeader([]string{"h1", "h2"})
+
+	t.AddHeader([]string{"heading 1", "heading 2", "heading 3"})
 	t.SetDefaultPadding(table.PadLeft)
+
 	err := t.SetThemeByName("Smooth")
 	if err != nil {
 		log.Println(err)
 		return
 	}
-	t.AddRow([]string{"", "2", "3\n42\n00"})
+
+	t.AddRow([]string{"", "2.5", "3\n42\n00"})
 	t.AddRow([]string{pb.String(), "9", "3\n02\n15"})
 	t.AddFooter([]string{"Total: something", pb2.String()})
 
@@ -31,12 +37,19 @@ func main() {
 		t.ChangeRow(1, []any{pb.String(), "9", "3\n02\n15"})
 		t.ChangeFooter([]any{"Total: something", pb2.String()})
 		t.Display()
-		fmt.Printf("\033[12F\033[m")
+		fmt.Printf("\033[12F\033[m") // returns cursor
 		pb.Inc(5)
 		pb2.Inc(15.123)
 		time.Sleep(500 * time.Millisecond)
 	}
+
 	t.ChangeRow(1, []any{pb.String(), "9", "3\n02\n15"})
-	t.ChangeFooter([]any{"Total: something", pb2.String()})
+	t.ChangeFooter(
+		[]any{
+			"",
+			aggregator.SumVertcally().SetDisplayFormat("Total: %9s").SetPrecision(2),
+			aggregator.SumVertcally().SetDisplayFormat("%9s").SetPrecision(2),
+		},
+	)
 	t.Display()
 }
