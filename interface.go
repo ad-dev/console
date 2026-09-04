@@ -1,6 +1,16 @@
 package console
 
-import "os"
+import (
+	"fmt"
+	"os"
+)
+
+type TextElement interface {
+	fmt.Stringer
+	Len() int
+	Truncate(int) string
+	SetTruncateIndicator(string)
+}
 
 type TableCell interface {
 	Column() int

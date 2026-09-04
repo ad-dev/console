@@ -34,11 +34,37 @@ func (t *AsciiTable) makeCustomCellWidth(row, col int, w int) {
 	t.Unlock()
 }
 
+func (t *AsciiTable) addCustomElement(row, col int, elm console.TextElement) {
+	t.Lock()
+	if t.customElements == nil {
+		t.customElements = make(map[location]console.TextElement)
+	}
+	t.customElements[location{row: row, col: col}] = elm
+	t.Unlock()
+}
+
+func (t *AsciiTable) getCustomElement(row, col int) console.TextElement {
+	t.Lock()
+	defer t.Unlock()
+
+	if ce, ok := t.customElements[location{row: row, col: col}]; ok {
+		return ce
+	}
+	return nil
+}
+
 func (t *AsciiTable) convertAnyRow(row []any) ([]string, error) {
 	var err error
 	r := make([]string, len(row))
 	cri := len(t.rows)
 	for i, c := range row {
+
+		if s, ok := c.(console.TextElement); ok {
+			r[i] = s.String()
+			t.addCustomElement(cri, i, s)
+			continue
+		}
+
 		switch c := c.(type) {
 		case string:
 			r[i] = c
@@ -227,9 +253,24 @@ func (t *AsciiTable) formatCell(l location, str string) string {
 		truncate = t.truncateCells[l.col]
 	}
 
-	if truncate && len([]rune(str)) > int(t.cellWidth) {
-		tr := []rune(str)[:t.cellWidth-1]
-		str = fmt.Sprintf("%s...", strings.TrimSpace(string(tr)))
+	cellLen := utf8.RuneCountInString(str)
+	ce := t.getCustomElement(l.row, l.col)
+
+	if ce == nil {
+		if truncate && cellLen > int(t.cellWidth) {
+			tr := []rune(str)[:int(t.cellWidth)-utf8.RuneCountInString(truncatedTextIndicator)]
+			str = fmt.Sprintf("%s%s", string(tr), truncatedTextIndicator)
+		}
+	} else {
+
+		if truncate && ce.Len() > int(t.cellWidth) {
+			ce.SetTruncateIndicator(truncatedTextIndicator)
+			str = fmt.Sprintf(
+				"%s%s",
+				string(ce.Truncate(int(t.cellWidth))),
+				truncatedTextIndicator,
+			)
+		}
 	}
 
 	if lf, found := t.cellFormatters[l]; found {
@@ -284,13 +325,19 @@ func (t *AsciiTable) displayRow(originalRowIndex int, row []string, cellWidths [
 			if cl, found := t.customCellWidths[originalRowIndex][j]; found && cl < cellLen {
 				cellLen = cl
 			}
+
+			if ce := t.getCustomElement(originalRowIndex, j); ce != nil {
+				cellLen = ce.Len()
+
+			}
+
 			padding := int(cellWidth) - cellLen + int(t.innerCellSpacing)
 
-			spacing := strings.Repeat(" ", int(t.innerCellSpacing))
+			spacing := strings.Repeat(defaultPaddingChar, int(t.innerCellSpacing))
 			if pd&PadLeft == PadLeft {
-				fmt.Fprintf(t.dest, "%s%s%s%s", strings.Repeat(" ", padding), row[j], spacing, s[StyleBorderVertical])
+				fmt.Fprintf(t.dest, "%s%s%s%s", strings.Repeat(defaultPaddingChar, padding), row[j], spacing, s[StyleBorderVertical])
 			} else {
-				fmt.Fprintf(t.dest, "%s%s%s%s", spacing, row[j], strings.Repeat(" ", padding), s[StyleBorderVertical])
+				fmt.Fprintf(t.dest, "%s%s%s%s", spacing, row[j], strings.Repeat(defaultPaddingChar, padding), s[StyleBorderVertical])
 			}
 		}
 	}
@@ -385,6 +432,11 @@ func (t *AsciiTable) getColWidths() []uint {
 					cw = ccw
 				}
 				t.Unlock()
+
+				if ce := t.getCustomElement(ri, i); ce != nil {
+					cw = ce.Len()
+				}
+
 				if cw > int(cellWidths[i]) {
 					cellWidths[i] = uint(cw)
 				}

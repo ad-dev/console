@@ -65,3 +65,8 @@ const (
 )
 
 const AnyIndex = -1
+
+const (
+	truncatedTextIndicator = "..."
+	defaultPaddingChar     = " "
+)

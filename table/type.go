@@ -41,6 +41,7 @@ type AsciiTable struct {
 	styleFooter         console.Style
 	currentTheme        console.Theme
 	customCellWidths    map[int]map[int]int
+	customElements      map[location]console.TextElement
 	borderInbetweenRows []console.TableCell
 }
 
