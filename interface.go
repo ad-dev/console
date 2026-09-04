@@ -43,6 +43,7 @@ type Table interface {
 	PrintFormattedJSON(key string) error
 	AddCellFormatter(row, col int, cb TableCellFormatterCallback, conditions ...TableCellCondition)
 	SetCellFormatter(row, col int, cb TableCellFormatterCallback, conditions ...TableCellCondition)
+	AddBorderInbetweenRowsIf(...TableCell)
 	SetHeaderStyle(s Style) error
 	SetBodyStyle(s Style) error
 	SetFooterStyle(s Style) error

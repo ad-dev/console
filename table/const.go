@@ -63,3 +63,5 @@ const (
 	LowerThan
 	GreaterThan
 )
+
+const AnyIndex = -1

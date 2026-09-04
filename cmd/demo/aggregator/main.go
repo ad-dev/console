@@ -24,6 +24,11 @@ func main() {
 	t.AddAnyRow([]any{aggregator.MinVertcally().SetPrecision(3)})
 	t.AddAnyRow([]any{aggregator.MaxVertcally().SetPrecision(3)})
 	t.AddAnyRow([]any{"mmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm"})
+	t.AddAnyRow([]any{"mmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm", "2"})
+	t.AddAnyRow([]any{"mmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm", "3"})
+	t.AddAnyRow([]any{"mmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm"})
+	t.AddAnyRow([]any{"mmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm"})
+	t.AddAnyRow([]any{"mmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm"})
 	t.SetCellFormatter(
 		0,
 		0,
@@ -38,5 +43,12 @@ func main() {
 	)
 	t.SetTheme(table.Smooth)
 	fmt.Println(t.ThemeName())
+
+	t.AddBorderInbetweenRowsIf(
+		table.NewCell(table.AnyIndex, 0, table.ValueChange{}),
+		table.NewCell(table.AnyIndex, 1, table.ValueChange{}),
+		table.NewCell(table.AnyIndex, 2, table.ValueChange{}),
+	)
+
 	t.Display()
 }

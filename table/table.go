@@ -446,7 +446,7 @@ func (t *AsciiTable) Display() error {
 		t.displayRow(i,
 			t.alignRow(t.rows[i], maxRowLen, PadRight),
 			colWidths, t.defaultPadding, t.styleBody)
-		if t.addRowDiv && (i < len(t.rows)-1) {
+		if (t.addRowDiv || t.addBorderInbetweenRows(i)) && (i < len(t.rows)-1) {
 			t.displayBorder(i+1, maxRowLen, colWidths, t.styleBody)
 		}
 	}
@@ -667,6 +667,65 @@ func (t *AsciiTable) GetData() ([]string, [][]string, []string, error) {
 	}
 
 	return t.header, t.rows, t.footer, nil
+}
+
+func (t *AsciiTable) AddBorderInbetweenRowsIf(c ...console.TableCell) {
+	if c != nil && len(c) > 0 {
+		t.borderInbetweenRows = c
+	}
+}
+
+func (t *AsciiTable) addBorderInbetweenRows(rowIndex int) bool {
+
+	if len(t.borderInbetweenRows) == 0 {
+		return false
+	}
+
+	fc := false
+	afc := true
+	var cv0, cv1 string
+	var cvf0, cvf1 bool
+
+	for _, tc := range t.borderInbetweenRows {
+		fc = false
+		switch vt := tc.Value().(type) {
+		case ValueChange:
+			if tc.Row() != AnyIndex && tc.Column() != AnyIndex {
+				if tc.Row() == rowIndex && len(t.rows) > rowIndex && len(t.rows[rowIndex]) > tc.Column() {
+					cv0 = t.rows[rowIndex][tc.Column()]
+					cvf0 = true
+				}
+
+				if tc.Row() == rowIndex && len(t.rows) > rowIndex+1 && len(t.rows[rowIndex+1]) > tc.Column() {
+					cv1 = t.rows[rowIndex+1][tc.Column()]
+					cvf1 = true
+				}
+
+				if vt.v1 == nil && vt.v2 == nil && cvf0 && cvf1 && cv0 != cv1 {
+					fc = true
+				}
+
+			} else if tc.Column() == AnyIndex {
+				if (rowIndex == tc.Row() || tc.Row() == AnyIndex) && len(t.rows) > rowIndex+1 {
+					for ci, col := range t.rows[rowIndex] {
+						if col != t.rows[rowIndex+1][ci] {
+							fc = true
+							break
+						}
+					}
+				}
+			} else if tc.Row() == AnyIndex && tc.Column() != AnyIndex {
+				if len(t.rows) > rowIndex+1 && len(t.rows[rowIndex]) > tc.Column() && len(t.rows[rowIndex+1]) > tc.Column() &&
+					t.rows[rowIndex][tc.Column()] != t.rows[rowIndex+1][tc.Column()] {
+					fc = true
+				}
+			}
+		default:
+		}
+		afc = afc && fc
+	}
+
+	return afc
 }
 
 func checkStyle(s console.Style, err error) error {
