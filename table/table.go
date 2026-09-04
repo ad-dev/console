@@ -233,6 +233,14 @@ func (t *AsciiTable) getMaxRowLen() int {
 		if l > maxRowLen {
 			maxRowLen = l
 		}
+
+		if len(t.header) > maxRowLen {
+			maxRowLen = len(t.header)
+		}
+
+		if len(t.footer) > maxRowLen {
+			maxRowLen = len(t.footer)
+		}
 	}
 	return maxRowLen
 }
@@ -332,6 +340,9 @@ func (t *AsciiTable) displayRow(originalRowIndex int, row []string, cellWidths [
 			}
 
 			padding := int(cellWidth) - cellLen + int(t.innerCellSpacing)
+			if padding < 0 {
+				padding = 0
+			}
 
 			spacing := strings.Repeat(defaultPaddingChar, int(t.innerCellSpacing))
 			if pd&PadLeft == PadLeft {
