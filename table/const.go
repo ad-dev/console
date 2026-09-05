@@ -53,8 +53,10 @@ const (
 )
 
 const (
-	HeaderIndex = -10
-	FooterIndex = -20
+	HeaderIndexTop    = -5
+	HeaderIndex       = -10
+	FooterIndexBottom = -15
+	FooterIndex       = -20
 )
 
 const (

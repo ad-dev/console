@@ -385,18 +385,18 @@ func (t *AsciiTable) getBiggestMultilineCell(row []string) int {
 }
 
 func (t *AsciiTable) displayBorder(originalRowNo, rowLen int, cellWidths []uint, style console.Style) {
-	rc := len(t.rows)
-
-	cornerStyle := style[StyleBorderJointLeft]
-	if originalRowNo == 0 {
+	var cornerStyle, cornerStyleRight string
+	switch originalRowNo {
+	case HeaderIndexTop:
 		cornerStyle = style[StyleCorner]
-	} else if originalRowNo == rc {
+		cornerStyleRight = style[StyleBorderJoint]
+	case FooterIndexBottom:
 		cornerStyle = style[StyleCornerBottom]
-	}
-
-	cornerStyleRight := style[StyleBorderJoint]
-	if originalRowNo == rc {
 		cornerStyleRight = style[StyleBorderJointBottom]
+
+	default:
+		cornerStyle = style[StyleBorderJointLeft]
+		cornerStyleRight = style[StyleBorderJoint]
 	}
 
 	fmt.Fprint(t.dest, cornerStyle)
@@ -407,15 +407,17 @@ func (t *AsciiTable) displayBorder(originalRowNo, rowLen int, cellWidths []uint,
 			cellWidth = cellWidths[i]
 		}
 
-		if i == rowLen-1 && originalRowNo < rc {
+		if i == rowLen-1 {
 			cornerStyleRight = style[StyleBorderJointRight]
-		} else if i == rowLen-1 && originalRowNo == rc {
+		}
+
+		if i == rowLen-1 && originalRowNo == FooterIndexBottom {
 			cornerStyleRight = style[StyleCornerBottomRight]
 		}
 
-		if originalRowNo == 0 && i == rowLen-1 {
+		if i == rowLen-1 && originalRowNo == HeaderIndexTop {
 			cornerStyleRight = style[StyleCornerRight]
-		} else if originalRowNo == 0 {
+		} else if originalRowNo == HeaderIndexTop {
 			cornerStyleRight = style[StyleBorderJointTop]
 		}
 
@@ -500,7 +502,7 @@ func (t *AsciiTable) Display() error {
 
 	colWidths := t.getColWidths()
 
-	t.displayBorder(0, maxRowLen, colWidths, t.styleHeader)
+	t.displayBorder(HeaderIndexTop, maxRowLen, colWidths, t.styleHeader)
 	if len(t.header) > 0 {
 		t.displayRow(HeaderIndex, t.header, colWidths, t.defaultPadding, t.styleHeader)
 		t.displayBorder(1, maxRowLen, colWidths, t.styleHeader)
@@ -518,7 +520,7 @@ func (t *AsciiTable) Display() error {
 		t.displayBorder(rc-1, maxRowLen, colWidths, t.styleFooter)
 		t.displayRow(FooterIndex, t.footer, colWidths, t.defaultPadding, t.styleFooter)
 	}
-	t.displayBorder(rc, maxRowLen, colWidths, t.styleFooter)
+	t.displayBorder(FooterIndexBottom, maxRowLen, colWidths, t.styleFooter)
 	return nil
 }
 

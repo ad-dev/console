@@ -55,6 +55,17 @@ func ExampleAsciiTable_SetTheme() {
 	t.SetTheme(table.OldSchool)
 	fmt.Printf("\nTheme name: %s\n", t.ThemeName())
 	t.Display()
+
+	fmt.Printf("\nTable with one row\n")
+	t = table.New(6, false, os.Stdout)
+	t.SetTheme(table.OldSchool)
+	t.SetDefaultPadding(table.PadLeft)
+	t.AddHeader([]string{"h1", "h2", "long header title lllllllllllllllllll"})
+
+	t.AddAnyRow([]any{table.CustomCellWidth{Content: "abc", Width: 30}})
+
+	t.AddFooter([]string{"Total: something"})
+	t.Display()
 	// Output:
 	//
 	// Theme name: ASCII
@@ -88,6 +99,15 @@ func ExampleAsciiTable_SetTheme() {
 	// ║                              1 ║      2 ║                                     3 ║
 	// ║                                ║        ║                                    42 ║
 	// ║                                ║        ║                                    00 ║
+	// ║                            abc ║        ║                                       ║
+	// ╠════════════════════════════════╬════════╬═══════════════════════════════════════╣
+	// ║                                ║        ║                      Total: something ║
+	// ╚════════════════════════════════╩════════╩═══════════════════════════════════════╝
+	//
+	// Table with one row
+	// ╔════════════════════════════════╦════════╦═══════════════════════════════════════╗
+	// ║                             h1 ║     h2 ║ long header title lllllllllllllllllll ║
+	// ╠════════════════════════════════╬════════╬═══════════════════════════════════════╣
 	// ║                            abc ║        ║                                       ║
 	// ╠════════════════════════════════╬════════╬═══════════════════════════════════════╣
 	// ║                                ║        ║                      Total: something ║
